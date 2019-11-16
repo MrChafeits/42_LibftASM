@@ -1,0 +1,1 @@
+global A_strspn
