@@ -1,8 +1,8 @@
 default rel
 global _ft_cat
 
-extern write
-extern read
+extern _write
+extern _read
 
 section .text
 
@@ -14,12 +14,12 @@ _ft_cat:
         jmp     L0OPS
 LO0PS:  mov     rsi, rsp
         mov     edi, 1
-        call    write
+        call    _write
 
 L0OPS:  mov     edx, 40H
         mov     rsi, rsp
         mov     edi, ebx
-        call    read
+        call    _read
         mov     rdx, rax
         test    rax, rax
         jg      LO0PS

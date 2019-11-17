@@ -14,6 +14,13 @@ impl_t *__start_impls, *__stop_impls;
 
 #ifdef TEST_MAIN
 
+#ifdef HAVE_CC_INHIBIT_LOOP_TO_LIBCALL
+# define inhibit_loop_to_libcall \
+	__attribute__ ((__optimize__ ("-fno-tree-loop-distribute-patterns")))
+#else
+# define inhibit_loop_to_libcall
+#endif
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>

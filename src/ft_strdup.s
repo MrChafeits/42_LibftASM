@@ -1,9 +1,9 @@
 default rel
 global _ft_strdup
 
-extern malloc
-extern A_memcpy
-extern _ft_strlen
+extern _malloc
+extern _A_memcpy
+extern _A_strlen
 
 section .text   align=16
 
@@ -14,20 +14,20 @@ _ft_strdup:
         push    rbx
         push    rcx
 
-        call    _ft_strlen
+        call    _A_strlen
 
         lea     rdi, [rax+1]
 
         mov     rbx, rax
 
-        call    malloc
+        call    _malloc
 
         test    rax, rax
         je      RETNOW
 
         mov     rdi, rax
         mov     rsi, rbp
-        mov     rcx, rbx
+        lea     rcx, [rbx+1]
         rep     movsb
 
 RETNOW: pop     rdx
@@ -44,7 +44,7 @@ RETNOW: pop     rdx
         mov     r15, rax
 
         lea     rdi, [rax+1]
-        call    malloc
+        call    _malloc
         mov     rbx, rax
 
         test    rax, rax
@@ -55,7 +55,7 @@ RETNOW: pop     rdx
         mov     rdi, rbx
         mov     rsi, r14
         mov     rdx, r15
-        call    A_memcpy
+        call    _A_memcpy
 
 LBBOI:  mov     rax, rbx
         pop     rbx

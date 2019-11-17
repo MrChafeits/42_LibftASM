@@ -18,33 +18,81 @@ extern int ft_isprint(int c);
 extern int ft_toupper(int c);
 extern int ft_tolower(int c);
 
-static int
-test_ctype(void)
+static void isalpha_test(void **state)
 {
 	unsigned short int c;
-	int lose = 0;
-	for (c = 0; c <= UCHAR_MAX; ++c) {
-		if (ft_isalpha(c) != isalpha(c))
-			++lose;
-		if (ft_isdigit(c) != isdigit(c))
-			++lose;
-		if (ft_isalnum(c) != isalnum(c))
-			++lose;
-		if (ft_isascii(c) != isascii(c))
-			++lose;
-		if (ft_isprint(c) != isprint(c))
-			++lose;
-		if (ft_toupper(c) != toupper(c))
-			++lose;
-		if (ft_tolower(c) != tolower(c))
-			++lose;
-	}
-	printf("Total BOGUS'd results %d\n", lose);
-	return lose;
+	for (c = 0; c <= UCHAR_MAX; ++c)
+		assert_int_equal(ft_isalpha(c), isalpha(c));
 }
 
-int
-test_main(void)
+static void isdigit_test(void **state)
 {
-	return test_ctype();
+	unsigned short int c;
+	for (c = 0; c <= UCHAR_MAX; ++c)
+	{
+		assert_int_equal(ft_isdigit(c), isdigit(c));
+	}
+}
+
+static void isalnum_test(void **state)
+{
+	unsigned short int c;
+	for (c = 0; c <= UCHAR_MAX; ++c)
+	{
+		assert_int_equal(ft_isalnum(c), isalnum(c));
+	}
+}
+
+static void isascii_test(void **state)
+{
+	unsigned short int c;
+	for (c = 0; c <= UCHAR_MAX; ++c)
+	{
+		assert_int_equal(ft_isascii(c), isascii(c));
+	}
+}
+
+static void isprint_test(void **state)
+{
+	unsigned short int c;
+	for (c = 0; c <= UCHAR_MAX; ++c)
+	{
+		assert_int_equal(ft_isprint(c), isprint(c));
+	}
+}
+
+static void toupper_test(void **state)
+{
+	unsigned short int c;
+	for (c = 0; c <= UCHAR_MAX; ++c)
+	{
+		assert_int_equal(ft_toupper(c), toupper(c));
+	}
+}
+
+static void tolower_test(void **state)
+{
+	unsigned short int c;
+	for (c = 0; c <= UCHAR_MAX; ++c)
+	{
+		assert_int_equal(ft_tolower(c), tolower(c));
+	}
+}
+
+int ctype_tests(void) {
+	const struct CMUnitTest ctype_tests[] = {
+		cmocka_unit_test(isalpha_test),
+		cmocka_unit_test(isdigit_test),
+		cmocka_unit_test(isalnum_test),
+		cmocka_unit_test(isascii_test),
+		cmocka_unit_test(isprint_test),
+		cmocka_unit_test(toupper_test),
+		cmocka_unit_test(tolower_test),
+	};
+	return cmocka_run_group_tests(ctype_tests, NULL, NULL);
+}
+
+int test_main(void)
+{
+	return ctype_tests();
 }

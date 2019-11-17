@@ -24,13 +24,14 @@ SRC = ft_bzero.s \
 	  ft_strdup.s \
 	  ft_cat.s \
 	  A_memcpy.s \
-	  A_strcat.s \
-	  A_strlen.s
+	  A_strlen.s \
+	  A_strspn.s \
+	  rdtsc.s
 
 SRCS = $(addprefix $(SRCDIR)/, $(SRC))
 OBJS = $(SRCS:.s=.o)
 
-CCFLAGS = -g
+CCFLAGS = -g -fsanitize=address
 INCLUDES =
 LDFLAGS = -L. -lfts
 
@@ -39,7 +40,8 @@ ifneq ("$(HAVE_USR_INC)", "0")
 	CCFLAGS += -Wno-nullability-completeness
 	INCLUDES += -I$(shell xcode-select -p)/SDKs/MacOSX.sdk/usr/include
 else
-	INCLUDES += -I/nfs/2018/c/callen/.brew/include
+	LDFLAGS += $(shell pkg-config --libs cmocka)
+	INCLUDES += $(shell pkg-config --cflags cmocka)
 endif
 
 CFLAGS = $(CCFLAGS) $(INCLUDES)
@@ -53,6 +55,7 @@ $(NAME): $(OBJS)
 test:
 	@echo TODO
 
+.PHONY: test-ctype test-strlen test-strcat test-memset test-memcpy test-bzero test-strdup test-puts
 test-ctype: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
 test-ctype: $(NAME)
 	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
@@ -85,15 +88,16 @@ test-puts: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
 test-puts: $(NAME)
 	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
 
-test-clean:
-	$(RM) test-ctype test-strlen test-strcat test-memset test-memcpy test-bzero test-strdup test-puts
+.PHONY: k test-clean
+k test-clean:
+	$(RM) test-ctype test-strlen test-strcat test-memset test-memcpy test-bzero test-strdup test-puts cat_stdout.txt puts_stdout.txt
 	$(RM) -r *.dSYM
 
 .PHONY: clean
 clean:
 	-$(RM) $(OBJS)
 
-fclean: clean
+fclean: clean test-clean
 	-$(RM) $(NAME)
 
 re: fclean all

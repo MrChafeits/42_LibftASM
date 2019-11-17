@@ -1,30 +1,46 @@
-#include <stdarg.h>
-#include <stddef.h>
-#include <setjmp.h>
-#include <cmocka.h>
-
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <ctype.h>
-#include <limits.h>
-#include <sys/mman.h>
 
-extern unsigned char *buf1, *buf2;
-extern int ret, do_srandom;
-extern unsigned int seed;
-extern size_t page_size;
-#define ITERATIONS 100000
+// Cmocka needs these
+// clang-format off
+#include <setjmp.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <cmocka.h>
+// clang-format on
 
 //! Must use repeat string operation
 extern char *ft_strdup(const char *s1);
-
-
-
-int
-main(int argc, const char *argv[])
+size_t simple_strlen(const char *s) {
+	const char *p = s;
+	while (*p)
+		++p;
+	return p - s;
+}
+static void strdup_test(void** state)
 {
-	if (argc > 1)
-		puts(argv[1]);
+	const char* base = "this is a base string";
+	char* dup;
+
+	dup = ft_strdup(base);
+	assert_ptr_not_equal(dup, NULL);
+	assert_int_equal(strlen(dup), 21);
+	assert_int_equal(strncmp(dup, base, strlen(dup)), 0);
+	free(dup);
+}
+
+#pragma mark - Public Functions -
+
+int strdup_tests(void)
+{
+	const struct CMUnitTest strdup_tests[] = {
+		cmocka_unit_test(strdup_test),
+	};
+
+	return cmocka_run_group_tests(strdup_tests, NULL, NULL);
+}
+
+int test_main(void)
+{
+	return strdup_tests();
 }
