@@ -1,5 +1,8 @@
-        section .text
-        global _ft_isalnum
+default rel
+global _ft_isalnum
+
+section .text
+
 _ft_isalnum:
         push    rbp                     ; Save callers base pointer value
         mov     rbp, rsp                ; Set up current function stack

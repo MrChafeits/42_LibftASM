@@ -1,5 +1,6 @@
-        section .text
-        global _ft_isdigit
+default rel
+global _ft_isdigit
+section .text
 _ft_isdigit:
         push    rbp                     ; Save callers base pointer value
         mov     rbp, rsp                ; Set up current function stack

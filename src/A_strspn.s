@@ -1,1 +1,3 @@
-global A_strspn
+default rel
+
+global _A_strspn

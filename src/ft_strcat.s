@@ -1,3 +1,4 @@
+default rel
 global _ft_strcat
 
 extern A_strlen

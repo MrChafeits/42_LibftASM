@@ -30,13 +30,16 @@ SRC = ft_bzero.s \
 SRCS = $(addprefix $(SRCDIR)/, $(SRC))
 OBJS = $(SRCS:.s=.o)
 
-CCFLAGS =
+CCFLAGS = -g
 INCLUDES =
+LDFLAGS = -L. -lfts
 
 HAVE_USR_INC = $(shell test -d /usr/include; echo "$$?")
 ifneq ("$(HAVE_USR_INC)", "0")
 	CCFLAGS += -Wno-nullability-completeness
 	INCLUDES += -I$(shell xcode-select -p)/SDKs/MacOSX.sdk/usr/include
+else
+	INCLUDES += -I/nfs/2018/c/callen/.brew/include
 endif
 
 CFLAGS = $(CCFLAGS) $(INCLUDES)
@@ -50,37 +53,41 @@ $(NAME): $(OBJS)
 test:
 	@echo TODO
 
-test-ctype: CFLAGS = $(CCFLAGS) -I/nfs/2018/c/callen/.brew/include -L. -lfts
+test-ctype: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
 test-ctype: $(NAME)
 	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
 
-test-strlen: CFLAGS = $(CCFLAGS) -I/nfs/2018/c/callen/.brew/include -L. -lfts
+test-strlen: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
 test-strlen: $(NAME)
 	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
 
-test-strcat: CFLAGS = $(CCFLAGS) -I/nfs/2018/c/callen/.brew/include -L. -lfts
+test-strcat: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
 test-strcat: $(NAME)
 	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
 
-test-memset: CFLAGS = $(CCFLAGS) -I/nfs/2018/c/callen/.brew/include -L. -lfts
+test-memset: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
 test-memset: $(NAME)
 	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
 
-test-memcpy: CFLAGS = $(CCFLAGS) -I/nfs/2018/c/callen/.brew/include -L. -lfts
+test-memcpy: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
 test-memcpy: $(NAME)
 	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
 
-test-bzero: CFLAGS = $(CCFLAGS) -I/nfs/2018/c/callen/.brew/include -L. -lfts
+test-bzero: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
 test-bzero: $(NAME)
 	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
 
-test-strdup: CFLAGS = $(CCFLAGS) -I/nfs/2018/c/callen/.brew/include -L. -lfts
+test-strdup: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
 test-strdup: $(NAME)
 	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
 
-test-puts: CFLAGS = $(CCFLAGS) -I/nfs/2018/c/callen/.brew/include -L. -lfts
+test-puts: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
 test-puts: $(NAME)
 	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
+
+test-clean:
+	$(RM) test-ctype test-strlen test-strcat test-memset test-memcpy test-bzero test-strdup test-puts
+	$(RM) -r *.dSYM
 
 .PHONY: clean
 clean:

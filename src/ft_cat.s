@@ -1,9 +1,11 @@
-        global _ft_cat
+default rel
+global _ft_cat
 
-        extern write
-        extern read
+extern write
+extern read
 
-        section .text
+section .text
+
 _ft_cat:
         push    rbx
         mov     ebx, edi

@@ -1,7 +1,8 @@
-        extern _ft_strlen
-        global _ft_puts
+default rel
+extern _ft_strlen
+global _ft_puts
 
-        section .text
+section .text
 _ft_puts:
         push    rbp                     ; Save callers base pointer value
         mov     rbp, rsp                ; Set up current function stack

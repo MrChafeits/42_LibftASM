@@ -1,5 +1,6 @@
-        section .text
-        global _ft_isalpha
+default rel
+global _ft_isalpha
+section .text
 _ft_isalpha:
         push    rbp                     ; Save callers base pointer value
         mov     rbp, rsp                ; Set up current function stack

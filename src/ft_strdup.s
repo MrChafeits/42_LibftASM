@@ -1,10 +1,11 @@
-        global _ft_strdup
+default rel
+global _ft_strdup
 
-        extern malloc
-        extern A_memcpy
-        extern _ft_strlen
+extern malloc
+extern A_memcpy
+extern _ft_strlen
 
-        section .text   align=16
+section .text   align=16
 
 _ft_strdup:
 %if 1

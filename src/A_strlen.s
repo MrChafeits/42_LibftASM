@@ -1,10 +1,11 @@
 default rel
-global A_strlen
+global _A_strlen
 
 section .text   align=16
+
 %define Rscopy  rdi
 
-A_strlen:
+_A_strlen:
         mov      rax,  rdi              ; get pointer to string from rdi
         mov      ecx,  edi              ; copy pointer (lower 32 bits)
         pxor     xmm0, xmm0             ; set to zero

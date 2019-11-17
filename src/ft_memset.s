@@ -1,5 +1,8 @@
-        section .text
-        global _ft_memset
+default rel
+global _ft_memset
+
+section .text
+
 _ft_memset:
         push    rbp                     ; Save callers base pointer value
         mov     rbp, rsp                ; Set up current function stack

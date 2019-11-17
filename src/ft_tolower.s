@@ -1,5 +1,8 @@
-        section .text
-        global _ft_tolower
+default rel
+global _ft_tolower
+
+section .text
+
 _ft_tolower:
         push    rbp                     ; Save callers base pointer value
         mov     rbp, rsp                ; Set up current function stack

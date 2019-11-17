@@ -1,7 +1,7 @@
 default rel
-section .text   align=16
 global _ft_bzero
 
+section .text   align=16
 ; void bzero(void *s, size_t n)
 %define Rdest   rdi
 %define Rcount  rdx

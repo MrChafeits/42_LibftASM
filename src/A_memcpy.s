@@ -1,5 +1,6 @@
 default rel
-global  A_memcpy
+
+global  _A_memcpy
 
 ; Define prolog for this function
 %macro PROLOGM  0
@@ -14,7 +15,7 @@ global  A_memcpy
 %endmacro
 
 section .text   align=16
-A_memcpy:       ; global label
+_A_memcpy:       ; global label
 A_memcpy@:      ; local label
         PROLOGM
         cmp     rcx, 40H
