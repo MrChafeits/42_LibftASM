@@ -66,53 +66,50 @@ test: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
 test: $(NAME)
 	$(CC) $(CFLAGS) -o $@ tests/main.c tests/test-ctype.c tests/test-strlen.c tests/test-strcat.c tests/test-memset.c tests/test-memcpy.c tests/test-bzero.c tests/test-puts.c tests/test-strdup.c
 
-tests/main.o: CFLAGS = $(CCFLAGS) -DSINGLE_TEST
-tests/main.o: tests/main.c
-
 .PHONY: test-ctype
 test-ctype: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS) -DSINGLE_TEST
-test-ctype: $(NAME) tests/main.o
-	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.o
+test-ctype: $(NAME)
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.c
 
 .PHONY: test-strlen
 test-strlen: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS) -DSINGLE_TEST
-test-strlen: $(NAME) tests/main.o
-	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.o
+test-strlen: $(NAME)
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.c
 
 .PHONY: test-strcat
 test-strcat: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS) -DSINGLE_TEST
-test-strcat: $(NAME) tests/main.o
-	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.o
+test-strcat: $(NAME)
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.c
 
 .PHONY: test-memset
 test-memset: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS) -DSINGLE_TEST
-test-memset: $(NAME) tests/main.o
-	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.o
+test-memset: $(NAME)
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.c
 
 .PHONY: test-memcpy
 test-memcpy: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS) -DSINGLE_TEST
-test-memcpy: $(NAME) tests/main.o
-	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.o
+test-memcpy: $(NAME)
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.c
 
 .PHONY: test-bzero
 test-bzero: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS) -DSINGLE_TEST
-test-bzero: $(NAME) tests/main.o
-	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.o
+test-bzero: $(NAME)
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.c
 
 .PHONY: test-strdup
 test-strdup: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS) -DSINGLE_TEST
-test-strdup: $(NAME) tests/main.o
-	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.o
+test-strdup: $(NAME)
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.c
 
 .PHONY: test-puts
 test-puts: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS) -DSINGLE_TEST
-test-puts: $(NAME) tests/main.o
-	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.o
+test-puts: $(NAME)
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.c
 
 .PHONY: k test-clean
 k test-clean:
 	$(RM) test-ctype test-strlen test-strcat test-memset test-memcpy test-bzero
-	$(RM) test-strdup test-puts cat_stdout.txt puts_stdout.txt tests/main.o test
+	$(RM) test test-strdup test-puts cat_stdout.txt puts_stdout.txt
 	$(RM) -r *.dSYM
 
 .PHONY: clean
