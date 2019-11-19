@@ -1,14 +1,17 @@
-#include <stdarg.h>
-#include <stddef.h>
-#include <setjmp.h>
-#include <cmocka.h>
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
 #include <limits.h>
+
+// Cmocka needs these
+// clang-format off
+#include <stdarg.h>
+#include <stddef.h>
+#include <setjmp.h>
+#include <cmocka.h>
+// clang-format on
 
 extern int ft_isalpha(int c);
 extern int ft_isdigit(int c);
@@ -18,65 +21,46 @@ extern int ft_isprint(int c);
 extern int ft_toupper(int c);
 extern int ft_tolower(int c);
 
-static void isalpha_test(void **state)
-{
+static void isalpha_test(void **state __unused) {
 	unsigned short int c;
 	for (c = 0; c <= UCHAR_MAX; ++c)
 		assert_int_equal(ft_isalpha(c), isalpha(c));
 }
 
-static void isdigit_test(void **state)
-{
+static void isdigit_test(void **state __unused) {
 	unsigned short int c;
 	for (c = 0; c <= UCHAR_MAX; ++c)
-	{
 		assert_int_equal(ft_isdigit(c), isdigit(c));
-	}
 }
 
-static void isalnum_test(void **state)
-{
+static void isalnum_test(void **state __unused) {
 	unsigned short int c;
 	for (c = 0; c <= UCHAR_MAX; ++c)
-	{
 		assert_int_equal(ft_isalnum(c), isalnum(c));
-	}
 }
 
-static void isascii_test(void **state)
-{
+static void isascii_test(void **state __unused) {
 	unsigned short int c;
 	for (c = 0; c <= UCHAR_MAX; ++c)
-	{
 		assert_int_equal(ft_isascii(c), isascii(c));
-	}
 }
 
-static void isprint_test(void **state)
-{
+static void isprint_test(void **state __unused) {
 	unsigned short int c;
 	for (c = 0; c <= UCHAR_MAX; ++c)
-	{
 		assert_int_equal(ft_isprint(c), isprint(c));
-	}
 }
 
-static void toupper_test(void **state)
-{
+static void toupper_test(void **state __unused) {
 	unsigned short int c;
 	for (c = 0; c <= UCHAR_MAX; ++c)
-	{
 		assert_int_equal(ft_toupper(c), toupper(c));
-	}
 }
 
-static void tolower_test(void **state)
-{
+static void tolower_test(void **state __unused) {
 	unsigned short int c;
 	for (c = 0; c <= UCHAR_MAX; ++c)
-	{
 		assert_int_equal(ft_tolower(c), tolower(c));
-	}
 }
 
 int ctype_tests(void) {
@@ -92,7 +76,6 @@ int ctype_tests(void) {
 	return cmocka_run_group_tests(ctype_tests, NULL, NULL);
 }
 
-int test_main(void)
-{
+int test_main(void) {
 	return ctype_tests();
 }

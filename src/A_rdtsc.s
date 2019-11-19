@@ -1,6 +1,6 @@
 default rel
 
-global _read_tsc
+global _ReadTSC
 
 section .text align=16
 
@@ -18,7 +18,7 @@ section .text align=16
 ; Note that clock counts may not be fully repoducible on Intel Core and
 ; Core 2 processors because the clock frequency can change.
 
-_read_tsc:
+_ReadTSC:
         push    rbx                     ; ebx is modified by cpuid
         sub     eax, eax                ; 0
         cpuid                           ; serialize
@@ -31,3 +31,4 @@ _read_tsc:
         pop     rax                     ; return value
         pop     rbx
         ret
+; _ReadTSC ENDP

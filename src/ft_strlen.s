@@ -1,7 +1,8 @@
 default rel
+
 global _ft_strlen
 
-section .text
+section .text   align=16
 
 _ft_strlen:
         push    rbx                     ;

@@ -1,11 +1,12 @@
 default rel
+
 global _ft_isascii
-section .text
-_ft_isascii:
-        push    rbp                     ; Save callers base pointer value
-        mov     rbp, rsp                ; Set up current function stack
-        xor     eax, eax
-        cmp     edi, 128
-        setb    al
-        pop     rbp                     ; Revert to saved base pointer value
-        ret                             ; Return to caller
+
+section .text   align=16
+; extern "C" int ft_isascii(int c);
+_ft_isascii: ; PROC
+        xor     eax, eax                ; clear return value
+        cmp     edi, 128                ; check
+        setb    al                      ; return 1 if 0 <= c <= 127
+        ret                             ; return to caller
+; _ft_isascii ENDP

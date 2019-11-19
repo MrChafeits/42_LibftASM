@@ -66,9 +66,9 @@ static void test_align(proto_t fn, unsigned dalign, unsigned salign, size_t len)
 	}
 }
 
-static void memcpy_aligned_test(void **state)
+static void memcpy_aligned_test(void __unused **state)
 {
-	for (int n = 0; n < sizeof(arr) / sizeof(*arr); ++n)
+	for (size_t n = 0; n < sizeof(arr) / sizeof(*arr); ++n)
 	{
 		for (unsigned i = 0; i < 16; i++)
 		{

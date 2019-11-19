@@ -28,11 +28,11 @@ unsigned char chk[64];
 char buf[] = "testing ft_puts output \n \t \v \b \e \a\xa5\x5a\x90\x00should't see this";
 size_t bl = 37;
 
-static void puts_test(void **state) {
+static void puts_test(void **state __unused) {
 	char outfile[] = "puts_stdout.txt";
 	fpos_t pos;
 	FILE *fp;
-	int in, out, fd;
+	int fd;
 
 	fd = dup(fileno(stdout));
 	fgetpos(stdout, &pos);
@@ -56,7 +56,7 @@ static void puts_test(void **state) {
 	assert_int_equal(fclose(fp), 0);
 }
 
-static void cat_test(void **state) {
+static void cat_test(void **state __unused) {
 	char outfile[] = "cat_stdout.txt";
 	fpos_t pos;
 	FILE *fpin, *fpout;

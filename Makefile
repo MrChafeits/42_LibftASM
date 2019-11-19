@@ -1,5 +1,5 @@
 AS = nasm
-ASFLAGS = -fmacho64
+ASFLAGS = -fmacho64 -Isrc -DPOSITIONINDEPENDENT -DUNIX
 ARFLAGS = -cru
 
 RANLIB = ranlib
@@ -26,13 +26,23 @@ SRC = ft_bzero.s \
 	  A_memcpy.s \
 	  A_strlen.s \
 	  A_strspn.s \
-	  rdtsc.s
+	  A_rdtsc.s \
+	  A_instrset.s \
+	  A_cachesize.s \
+	  A_debugbreak.s \
+	  A_unalignedisfaster.s \
+	  A_cputype.s \
+	  A_memcmp.s \
+	  A_memmove.s \
+	  A_substring.s
 
 SRCS = $(addprefix $(SRCDIR)/, $(SRC))
 OBJS = $(SRCS:.s=.o)
 
-CCFLAGS = -g -fsanitize=address
-INCLUDES =
+INCDIR = include
+
+CCFLAGS = -Wall -Wextra -Werror
+INCLUDES = -I$(INCDIR)
 LDFLAGS = -L. -lfts
 
 HAVE_USR_INC = $(shell test -d /usr/include; echo "$$?")
@@ -55,38 +65,48 @@ $(NAME): $(OBJS)
 test:
 	@echo TODO
 
-.PHONY: test-ctype test-strlen test-strcat test-memset test-memcpy test-bzero test-strdup test-puts
+tests/main.o: CFLAGS = $(CCFLAGS)
+tests/main.o: tests/main.c
+
+.PHONY: test-ctype
 test-ctype: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
-test-ctype: $(NAME)
-	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
+test-ctype: $(NAME) tests/main.o
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.o
 
+.PHONY: test-strlen
 test-strlen: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
-test-strlen: $(NAME)
-	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
+test-strlen: $(NAME) tests/main.o
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.o
 
+.PHONY: test-strcat
 test-strcat: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
-test-strcat: $(NAME)
-	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
+test-strcat: $(NAME) tests/main.o
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.o
 
+.PHONY: test-memset
 test-memset: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
-test-memset: $(NAME)
-	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
+test-memset: $(NAME) tests/main.o
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.o
 
+.PHONY: test-memcpy
 test-memcpy: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
-test-memcpy: $(NAME)
-	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
+test-memcpy: $(NAME) tests/main.o
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.o
 
+.PHONY: test-bzero
 test-bzero: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
-test-bzero: $(NAME)
-	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
+test-bzero: $(NAME) tests/main.o
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.o
 
+.PHONY: test-strdup
 test-strdup: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
-test-strdup: $(NAME)
-	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
+test-strdup: $(NAME) tests/main.o
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.o
 
+.PHONY: test-puts
 test-puts: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
-test-puts: $(NAME)
-	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/test-main.c
+test-puts: $(NAME) tests/main.o
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.o
 
 .PHONY: k test-clean
 k test-clean:

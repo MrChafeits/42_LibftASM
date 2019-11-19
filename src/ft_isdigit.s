@@ -1,12 +1,13 @@
 default rel
+
 global _ft_isdigit
-section .text
-_ft_isdigit:
-        push    rbp                     ; Save callers base pointer value
-        mov     rbp, rsp                ; Set up current function stack
-        add     edi, -48                ; Subtract '0' from argument
-        xor     eax, eax                ; Clear out return register
+
+section .text   align=16
+; extern "C" int ft_isdigit(int c);
+_ft_isdigit: ; PROC
+        add     edi, -48                ; c - '0'
+        xor     eax, eax                ; clear out return register
         cmp     edi, 10
-        setb    al                      ; Return 1 if edi < 10
-        pop     rbp                     ; Revert to saved base pointer value
-        ret                             ; Return to caller
+        setb    al                      ; return 1 if 0 <= edi < 10
+        ret                             ; return to caller
+; _ft_isdigit ENDP

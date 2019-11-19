@@ -11,14 +11,15 @@
 
 //! Must use repeat string operation
 extern char *ft_strdup(const char *s1);
+
 size_t simple_strlen(const char *s) {
 	const char *p = s;
 	while (*p)
 		++p;
 	return p - s;
 }
-static void strdup_test(void** state)
-{
+
+static void strdup_test(void **state __unused) {
 	const char* base = "this is a base string";
 	char* dup;
 
@@ -31,8 +32,7 @@ static void strdup_test(void** state)
 
 #pragma mark - Public Functions -
 
-int strdup_tests(void)
-{
+int strdup_tests(void) {
 	const struct CMUnitTest strdup_tests[] = {
 		cmocka_unit_test(strdup_test),
 	};
@@ -40,7 +40,6 @@ int strdup_tests(void)
 	return cmocka_run_group_tests(strdup_tests, NULL, NULL);
 }
 
-int test_main(void)
-{
+int test_main(void) {
 	return strdup_tests();
 }

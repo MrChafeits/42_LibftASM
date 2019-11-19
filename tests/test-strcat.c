@@ -207,8 +207,7 @@ extern char *ft_strcat(char *restrict s1, const char *restrict s2);
 
 proto_t arr[] = {ft_strcat,};
 
-static void test_strcat(proto_t fn, void** state)
-{
+static void test_strcat(proto_t fn, void **state __unused) {
 	char b[32];
 	strcpy(b, "abc");
 	assert_ptr_equal(fn(b, "123456"), b);
@@ -222,14 +221,13 @@ static void test_strcat(proto_t fn, void** state)
 }
 
 static void strcat_test(void **state) {
-	for (int ii = 0; ii < sizeof(arr)/sizeof(*arr); ++ii)
+	for (size_t ii = 0; ii < sizeof(arr)/sizeof(*arr); ++ii)
 		test_strcat(arr[ii], state);
 }
 
 #pragma mark - Public Functions -
 
-int strcat_tests(void)
-{
+int strcat_tests(void) {
 	const struct CMUnitTest strcat_tests[] = {
 		cmocka_unit_test(strcat_test),
 	};
