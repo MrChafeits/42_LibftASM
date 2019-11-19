@@ -96,8 +96,9 @@ int puts_tests(void)
 
 	return cmocka_run_group_tests(puts_tests, NULL, NULL);
 }
-
+#ifdef SINGLE_TEST
 int test_main(void)
 {
 	return puts_tests();
 }
+#endif

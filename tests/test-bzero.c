@@ -70,7 +70,8 @@ int bzero_tests(void) {
 
 	return cmocka_run_group_tests(bzero_tests, NULL, NULL);
 }
-
+#ifdef SINGLE_TEST
 int test_main(void) {
 	return bzero_tests();
 }
+#endif

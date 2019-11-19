@@ -75,7 +75,8 @@ int ctype_tests(void) {
 	};
 	return cmocka_run_group_tests(ctype_tests, NULL, NULL);
 }
-
+#ifdef SINGLE_TEST
 int test_main(void) {
 	return ctype_tests();
 }
+#endif

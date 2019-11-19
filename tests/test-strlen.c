@@ -38,7 +38,8 @@ int strlen_tests(void) {
 
 	return cmocka_run_group_tests(strlen_tests, NULL, NULL);
 }
-
+#ifdef SINGLE_TEST
 int test_main(void) {
 	return strlen_tests();
 }
+#endif

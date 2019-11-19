@@ -234,7 +234,8 @@ int strcat_tests(void) {
 
 	return cmocka_run_group_tests(strcat_tests, NULL, NULL);
 }
-
+#ifdef SINGLE_TEST
 int test_main(void) {
 	return strcat_tests();
 }
+#endif

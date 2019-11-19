@@ -39,7 +39,8 @@ int strdup_tests(void) {
 
 	return cmocka_run_group_tests(strdup_tests, NULL, NULL);
 }
-
+#ifdef SINGLE_TEST
 int test_main(void) {
 	return strdup_tests();
 }
+#endif

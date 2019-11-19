@@ -91,7 +91,8 @@ int memcpy_tests(void)
 
 	return cmocka_run_group_tests(memcpy_tests, NULL, NULL);
 }
-
+#ifdef SINGLE_TEST
 int test_main(void) {
 	return memcpy_tests();
 }
+#endif

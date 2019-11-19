@@ -80,7 +80,8 @@ int memset_tests(void) {
 
 	return cmocka_run_group_tests(memset_tests, NULL, NULL);
 }
-
+#ifdef SINGLE_TEST
 int test_main(void) {
 	return memset_tests();
 }
+#endif
