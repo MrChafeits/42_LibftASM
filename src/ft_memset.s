@@ -11,3 +11,4 @@ _ft_memset:
         rep     stosb
         mov     rax, r9                 ; b
         ret                             ; return to caller
+; _ft_memset ENDP

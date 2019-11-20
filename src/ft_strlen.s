@@ -3,7 +3,7 @@ default rel
 global _ft_strlen
 
 section .text   align=16
-
+; extern "C" size_t ft_strlen(const char *s);
 _ft_strlen:
         push    rbx                     ;
         push    rcx
@@ -17,3 +17,4 @@ _ft_strlen:
         pop     rcx
         pop     rbx
         ret
+; _ft_strlen ENDP

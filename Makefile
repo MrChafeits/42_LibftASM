@@ -106,10 +106,15 @@ test-puts: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS) -DSINGLE_TEST
 test-puts: $(NAME)
 	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.c
 
+.PHONY: test-strspn
+test-strspn: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS) -DSINGLE_TEST
+test-strspn: $(NAME)
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.c
+
 .PHONY: k test-clean
 k test-clean:
-	$(RM) test-ctype test-strlen test-strcat test-memset test-memcpy test-bzero
-	$(RM) test test-strdup test-puts cat_stdout.txt puts_stdout.txt
+	$(RM) test test-ctype test-strlen test-strcat test-memset test-memcpy
+	$(RM) test-bzero test-strdup test-puts cat_stdout.txt puts_stdout.txt test-strspn
 	$(RM) -r *.dSYM
 
 .PHONY: clean

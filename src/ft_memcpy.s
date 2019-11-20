@@ -9,3 +9,4 @@ _ft_memcpy:
         mov     rcx, rdx                ; n
         rep     movsb                   ; Yeehaw, Linus
         ret                             ; return to caller
+; _ft_memcpy ENDP
