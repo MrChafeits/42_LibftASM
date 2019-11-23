@@ -206,18 +206,14 @@ int strspn_tests(void) {
 
   test_init();
 
-  // printf("%32s", "");
-  // FOR_EACH_IMPL(impl, 0) { printf("\t%s", impl->name); }
-  // putchar('\n');
-
-  const struct CMUnitTest puts_tests[] = {
+  const struct CMUnitTest strspn_tests[] = {
     cmocka_unit_test(test_group_one),
     cmocka_unit_test(test_group_two),
     cmocka_unit_test(test_group_three),
     cmocka_unit_test(test_group_four),
     cmocka_unit_test(test_group_five),
   };
-  ret |= cmocka_run_group_tests(puts_tests, NULL, NULL);
+  ret |= cmocka_run_group_tests(strspn_tests, NULL, NULL);
   test_deinit(0);
   return ret;
 }

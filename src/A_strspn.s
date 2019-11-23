@@ -296,5 +296,5 @@ section .data
 strspnDispatch  DQ strspnCPUDispatch
 strcspnDispatch DQ strcspnCPUDispatch
 
-SECTION .bss
-dq 0, 0
+section .bss
+alignb  32
