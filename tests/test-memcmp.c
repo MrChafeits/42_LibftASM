@@ -19,7 +19,7 @@
 #define UCHAR unsigned char
 #define CHARBYTES 1
 
-int simple_memcmp(const char *s1, const char *s2, size_t n) {
+static int simple_memcmp(const char *s1, const char *s2, size_t n) {
   int ret = 0;
 
   while (n-- && (ret = *(unsigned char *)s1++ - *(unsigned char *)s2++) == 0)
@@ -27,7 +27,7 @@ int simple_memcmp(const char *s1, const char *s2, size_t n) {
   return ret;
 }
 
-int builtin_memcmp(const void *s1, const void *s2, size_t n) {
+static int builtin_memcmp(const void *s1, const void *s2, size_t n) {
   return __builtin_memcmp(s1, s2, n);
 }
 
@@ -189,7 +189,7 @@ static void check2(impl_t *impl) {
   }
 }
 
-int memcmp_test(void **state) {
+static int memcmp_test(void **state) {
   s_tstbuf *tst = (s_tstbuf *)(*state);
   size_t i;
 
@@ -229,50 +229,25 @@ int memcmp_test(void **state) {
   return tst->ret;
 }
 
-int test_setup(void **state) {
-  test_init();
-  s_tstbuf *buf = calloc(1, sizeof(*buf));
-  if (buf == NULL)
-    return 1;
-  buf->buf1 = buf1;
-  buf->buf2 = buf2;
-  buf->do_srandom = do_srandom;
-  buf->page_size = page_size;
-  buf->ret = ret = 0;
-  buf->seed = seed;
-  *state = buf;
-  return 0;
-}
-
-int test_teardown(void **state) {
-  s_tstbuf *tmp = (s_tstbuf *)(*state);
-  if (munmap(tmp->buf1, (BUF1PAGES + 1) * page_size))
-    return 1;
-  if (munmap(tmp->buf2, 2 * page_size))
-    return 1;
-  free(tmp);
-  return 0;
-}
-
-void test_ft_memcmp(void **state) {
+static void test_ft_memcmp(void **state) {
   s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_ft_memcmp;
   tst->ret |= memcmp_test(state);
 }
 
-void test_simple_memcmp(void **state) {
+static void test_simple_memcmp(void **state) {
   s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_SIMPLE_MEMCMP;
   tst->ret |= memcmp_test(state);
 }
 
-void test_builtin_memcmp(void **state) {
+static void test_builtin_memcmp(void **state) {
   s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_builtin_memcmp;
   tst->ret |= memcmp_test(state);
 }
 
-void test_memcmp(void **state) {
+static void test_memcmp(void **state) {
   s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_MEMCMP;
   tst->ret |= memcmp_test(state);

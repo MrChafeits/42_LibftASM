@@ -12,7 +12,7 @@
 
 extern void *ft_memmove(void *, const void *, size_t);
 
-char *simple_memmove(char *, const char *, size_t);
+static char *simple_memmove(char *, const char *, size_t);
 
 typedef char *(*proto_t)(char *, const char *, size_t);
 
@@ -20,7 +20,7 @@ IMPL(simple_memmove, 0)
 IMPL(ft_memmove, 0)
 IMPL(memmove, 0)
 
-char *simple_memmove(char *dst, const char *src, size_t n) {
+static char *simple_memmove(char *dst, const char *src, size_t n) {
   char *ret = dst;
   if (src < dst) {
     dst += n;
@@ -191,7 +191,7 @@ static void do_test2(impl_t *impl) {
   munmap((void *)large_buf, size);
 }
 
-int memmove_test(void **state) {
+static int memmove_test(void **state) {
   s_tstbuf *tst = (s_tstbuf *)(*state);
   size_t i;
 
@@ -224,44 +224,19 @@ int memmove_test(void **state) {
   return tst->ret;
 }
 
-int test_setup(void **state) {
-  test_init();
-  s_tstbuf *buf = calloc(1, sizeof(*buf));
-  if (buf == NULL)
-    return 1;
-  buf->buf1 = buf1;
-  buf->buf2 = buf2;
-  buf->do_srandom = do_srandom;
-  buf->page_size = page_size;
-  buf->ret = ret = 0;
-  buf->seed = seed;
-  *state = buf;
-  return 0;
-}
-
-int test_teardown(void **state) {
-  s_tstbuf *tmp = (s_tstbuf *)(*state);
-  if (munmap(tmp->buf1, (BUF1PAGES + 1) * page_size))
-    return 1;
-  if (munmap(tmp->buf2, 2 * page_size))
-    return 1;
-  free(tmp);
-  return 0;
-}
-
-void test_ft_memmove(void **state) {
+static void test_ft_memmove(void **state) {
   s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_ft_memmove;
   tst->ret |= memmove_test(state);
 }
 
-void test_simple_memmove(void **state) {
+static void test_simple_memmove(void **state) {
   s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_simple_memmove;
   tst->ret |= memmove_test(state);
 }
 
-void test_memmove(void **state) {
+static void test_memmove(void **state) {
   s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_memmove;
   tst->ret |= memmove_test(state);

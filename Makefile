@@ -47,9 +47,9 @@ test-rdtsc.c \
 test-strcat.c \
 test-strcspn.c \
 test-strdup.c \
-test-string.h \
 test-strlen.c \
-test-strspn.c
+test-strspn.c \
+test-strstr.c
 
 SRCS = $(addprefix $(SRCDIR)/, $(SRC))
 OBJS = $(SRCS:.s=.o)
@@ -152,6 +152,11 @@ test-strspn: $(NAME)
 .PHONY: test-strcspn
 test-strcspn: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS) -DSINGLE_TEST
 test-strcspn: $(NAME)
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.c
+
+.PHONY: test-strstr
+test-strstr: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS) -DSINGLE_TEST
+test-strstr: $(NAME)
 	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.c
 
 .PHONY: test-rdtsc

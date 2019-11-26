@@ -148,31 +148,6 @@ static void do_random_tests(impl_t *impl) {
   }
 }
 
-int test_setup(void **state) {
-  test_init();
-  s_tstbuf *buf = calloc(1, sizeof(*buf));
-  if (buf == NULL)
-    return 1;
-  buf->buf1 = buf1;
-  buf->buf2 = buf2;
-  buf->do_srandom = do_srandom;
-  buf->page_size = page_size;
-  buf->ret = ret;
-  buf->seed = seed;
-  *state = buf;
-  return 0;
-}
-
-int test_teardown(void **state) {
-  s_tstbuf *tmp = (s_tstbuf*)(*state);
-  if (munmap(tmp->buf1, (BUF1PAGES+1)*page_size))
-    return 1;
-  if (munmap(tmp->buf2, 2*page_size))
-    return 1;
-  free(tmp);
-  return 0;
-}
-
 int strspn_test(void **state) {
   s_tstbuf *tst = (s_tstbuf*)(*state);
   size_t i;

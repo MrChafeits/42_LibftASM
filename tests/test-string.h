@@ -51,13 +51,13 @@ typedef struct s_tstbuf {
 
 #define TEST_FUNCTION test_main
 #define TIMEOUT (4 * 60)
-unsigned char *buf1, *buf2;
-int ret, do_srandom;
-unsigned int seed;
-size_t page_size;
+static unsigned char *buf1, *buf2;
+static int ret, do_srandom;
+static unsigned int seed;
+static size_t page_size;
 
 #ifndef ITERATIONS
-size_t iterations = 100000;
+static size_t iterations = 100000;
 #define ITERATIONS iterations
 #endif
 
@@ -152,5 +152,33 @@ test_init(void)
 	memset(buf1, 0xa5, BUF1PAGES * page_size);
 	memset(buf2, 0x5a, page_size);
 }
+
+static int
+test_setup(void **state) {
+	test_init();
+	s_tstbuf *buf = calloc(1, sizeof(*buf));
+	if (buf == NULL)
+		return 1;
+	buf->buf1 = buf1;
+	buf->buf2 = buf2;
+	buf->do_srandom = do_srandom;
+	buf->page_size = page_size;
+	buf->ret = ret = 0;
+	buf->seed = seed;
+	*state = buf;
+	return 0;
+}
+
+static int
+test_teardown(void **state) {
+	s_tstbuf *tmp = (s_tstbuf*)(*state);
+	if (munmap(tmp->buf1, (BUF1PAGES+1)*page_size))
+		return 1;
+	if (munmap(tmp->buf2, 2*page_size))
+		return 1;
+	free(tmp);
+	return 0;
+}
+
 
 #endif

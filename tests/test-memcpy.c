@@ -13,8 +13,8 @@
 #define TEST_NAME "memcpy"
 #include "test-string.h"
 
-char *simple_memcpy(char *, const char *, size_t);
-char *builtin_memcpy(char *, const char *, size_t);
+static char *simple_memcpy(char *, const char *, size_t);
+static char *builtin_memcpy(char *, const char *, size_t);
 extern void *ft_memcpy(void *, const void *, size_t);
 
 IMPL(simple_memcpy, 0)
@@ -22,14 +22,14 @@ IMPL(builtin_memcpy, 0)
 IMPL(ft_memcpy, 1)
 IMPL(memcpy, 1)
 
-char *simple_memcpy(char *dst, const char *src, size_t n) {
+static char *simple_memcpy(char *dst, const char *src, size_t n) {
   char *ret = dst;
   while (n--)
     *dst++ = *src++;
   return ret;
 }
 
-char *builtin_memcpy(char *dst, const char *src, size_t n) {
+static char *builtin_memcpy(char *dst, const char *src, size_t n) {
   return __builtin_memcpy(dst, src, n);
 }
 #endif
@@ -157,7 +157,7 @@ static void do_test1(impl_t *impl) {
   }
 
   if (mprotect(large_buf + size, page_size, PROT_NONE))
-    error(EXIT_FAILURE, errno, "mprotect failed");
+    errc(EXIT_FAILURE, errno, "mprotect failed");
 
   size_t arrary_size = size / sizeof(uint32_t);
   uint32_t *dest = large_buf;
@@ -176,7 +176,7 @@ static void do_test1(impl_t *impl) {
   munmap((void *)src, size);
 }
 
-int memcpy_test(void **state) {
+static int memcpy_test(void **state) {
   s_tstbuf *tst = (s_tstbuf*)(*state);
   size_t i;
 
@@ -214,50 +214,25 @@ int memcpy_test(void **state) {
   return tst->ret;
 }
 
-int test_setup(void **state) {
-  test_init();
-  s_tstbuf *buf = calloc(1, sizeof(*buf));
-  if (buf == NULL)
-    return 1;
-  buf->buf1 = buf1;
-  buf->buf2 = buf2;
-  buf->do_srandom = do_srandom;
-  buf->page_size = page_size;
-  buf->ret = ret = 0;
-  buf->seed = seed;
-  *state = buf;
-  return 0;
-}
-
-int test_teardown(void **state) {
-  s_tstbuf *tmp = (s_tstbuf*)(*state);
-  if (munmap(tmp->buf1, (BUF1PAGES+1)*page_size))
-    return 1;
-  if (munmap(tmp->buf2, 2*page_size))
-    return 1;
-  free(tmp);
-  return 0;
-}
-
-void test_ft_memcpy(void **state) {
+static void test_ft_memcpy(void **state) {
   s_tstbuf *tst = (s_tstbuf*)(*state);
   tst->impl = &tst_ft_memcpy;
   tst->ret |= memcpy_test(state);
 }
 
-void test_simple_memcpy(void **state) {
+static void test_simple_memcpy(void **state) {
   s_tstbuf *tst = (s_tstbuf*)(*state);
   tst->impl = &tst_simple_memcpy;
   tst->ret |= memcpy_test(state);
 }
 
-void test_builtin_memcpy(void **state) {
+static void test_builtin_memcpy(void **state) {
   s_tstbuf *tst = (s_tstbuf*)(*state);
   tst->impl = &tst_builtin_memcpy;
   tst->ret |= memcpy_test(state);
 }
 
-void test_memcpy(void **state) {
+static void test_memcpy(void **state) {
   s_tstbuf *tst = (s_tstbuf*)(*state);
   tst->impl = &tst_memcpy;
   tst->ret |= memcpy_test(state);
