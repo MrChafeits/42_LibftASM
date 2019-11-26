@@ -1,5 +1,18 @@
 # 42_LibftASM
 Introduction to 64-bit NASM by reimplementing several Libft functions
+Usage
+
+ToUsage
+-----
+To get started, you must first clone the repository and compile the code as follows:
+```bash
+git clone https://github.com/MrChafeits/42_LibftASM.git
+cd 42_LibftASM
+make
+```
+This will build a library called `libfts.a`, which can then be linked and used as any other library.
+The tests depend on [cmocka](https://cmocka.org/) and a properly configured pkg-config file for cmocka.
+All of the test cases can be built with `make test`, and individual ones can be built with `make test-$(TESTNAME)`.
 
 ## General Instructions (adapted from subject pdf)
 * Static library must be names libfts.a
