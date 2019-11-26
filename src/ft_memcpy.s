@@ -8,5 +8,5 @@ _ft_memcpy:
         mov     rax, rdi                ; dst
         mov     rcx, rdx                ; n
         rep     movsb                   ; Yeehaw, Linus
-        ret                             ; return to caller
+        ret
 ; _ft_memcpy ENDP

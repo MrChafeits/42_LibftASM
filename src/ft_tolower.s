@@ -10,5 +10,5 @@ _ft_tolower:
         or      eax, 32                 ;
         cmp     ecx, 25                 ;
         cmova   eax, edi                ;
-        ret                             ; Return to caller
+        ret
 ; _ft_tolower ENDP

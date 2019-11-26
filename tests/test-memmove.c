@@ -9,10 +9,8 @@
 #define TEST_MAIN
 #define TEST_NAME "memmove"
 #include "test-string.h"
-/* TODO: rewrite this to be more cmocka-friendly */
 
 extern void *ft_memmove(void *, const void *, size_t);
-extern void *A_memmove(void *, const void *, size_t);
 
 char *simple_memmove(char *, const char *, size_t);
 
@@ -20,11 +18,9 @@ typedef char *(*proto_t)(char *, const char *, size_t);
 
 IMPL(simple_memmove, 0)
 IMPL(ft_memmove, 0)
-IMPL(A_memmove, 0)
 IMPL(memmove, 0)
 
-char *inhibit_loop_to_libcall simple_memmove(char *dst, const char *src,
-                                             size_t n) {
+char *simple_memmove(char *dst, const char *src, size_t n) {
   char *ret = dst;
   if (src < dst) {
     dst += n;
@@ -43,32 +39,13 @@ static void do_one_test(impl_t *impl, char *dst, char *src,
   memcpy(src, orig_src, len);
   char *res;
 
-  // res = CALL(impl, dst, src, len);
-  res = (*(proto_t)(impl)->fn)(dst, src, len);
-  #ifndef DEBUG
+  res = CALL(impl, dst, src, len);
   assert_int_equal(res, dst);
-  #else
-  if (res != dst) {
-    fprintf(stderr, "Wrong result in function %s %p %p", impl->name,
-	     res, dst);
-      ret = 1;
-      return;
-  }
-  #endif
 
-  #ifndef DEBUG
-  assert_int_equal(memcmp(dst, orig_src, len), 0);
-  #else
-  if (memcmp(dst, orig_src, len) !=  0) {
-    fprintf(stderr, "Wrong result in function %s dst \"%s\" src \"%s\"",
-	     impl->name, dst, src);
-      ret = 1;
-      return;
-  }
-  #endif
+  assert_memory_equal(dst, orig_src, len);
 }
 
-static void do_test(size_t align1, size_t align2, size_t len) {
+static void do_test(impl_t *impl, size_t align1, size_t align2, size_t len) {
   size_t i, j;
   char *s1, *s2;
 
@@ -85,13 +62,11 @@ static void do_test(size_t align1, size_t align2, size_t len) {
 
   for (i = 0, j = 1; i < len; i++, j += 23)
     s1[i] = j;
-  // func_count = 3;
-  FOR_EACH_IMPL(impl, 0) {
-      do_one_test(impl, s2, (char *)(buf2 + align1), s1, len);
-  }
+
+  do_one_test(impl, s2, (char *)(buf2 + align1), s1, len);
 }
 
-static void do_random_tests(void) {
+static void do_random_tests(impl_t *impl) {
   size_t i, n, align1, align2, len, size;
   size_t srcstart, srcend, dststart, dstend;
   int c;
@@ -143,102 +118,58 @@ static void do_random_tests(void) {
     else
       dststart = 0;
 
-    FOR_EACH_IMPL(impl, 1) {
-      memset(p2 + dststart, c, dstend - dststart);
-      memcpy(p2 + srcstart, p1 + srcstart, srcend - srcstart);
-      res = (unsigned char *)CALL(impl, (char *)(p2 + align2),
-                                  (char *)(p2 + align1), len);
-      #ifndef DEBUG
-      assert_int_equal(res, p2 + align2);
-      #else
-      if (res != p2 + align2) {
-        fprintf(stderr, "Iteration %zd - wrong result in function %s (%zd, %zd, %zd) %p != %p",
-		     n, impl->name, align1, align2, len, res, p2 + align2);
-	      ret = 1;
-      }
-      #endif
+    memset(p2 + dststart, c, dstend - dststart);
+    memcpy(p2 + srcstart, p1 + srcstart, srcend - srcstart);
+    res = (unsigned char *)CALL(impl, (char *)(p2 + align2),
+                                (char *)(p2 + align1), len);
+    assert_int_equal(res, p2 + align2);
 
-      #ifndef DEBUG
-      assert_int_equal(memcmp(p1 + align1, p2 + align2, len), 0);
-      #else
-      if (memcmp(p1 + align1, p2 + align2, len) != 0) {
-        fprintf(stderr, "Iteration %zd - different strings, %s (%zd, %zd, %zd)",
-		     n, impl->name, align1, align2, len);
-	      ret = 1;
-      }
-      #endif
+    assert_memory_equal(p1 + align1, p2 + align2, len);
 
-      for (i = dststart; i < dstend; ++i) {
-        if (i >= align2 && i < align2 + len) {
-          i = align2 + len - 1;
-          continue;
-        }
-        if (i >= srcstart && i < srcend) {
-          i = srcend - 1;
-          continue;
-        }
-        #ifndef DEBUG
-        assert_int_equal(p2[i], c);
-        #else
-        if (p2[i] != c) {
-          fprintf(stderr, "Iteration %zd - garbage in memset area, %s (%zd, %zd, %zd)",
-            n, impl->name, align1, align2, len);
-          ret = 1;
-		      break;
-        }
-        #endif
+    for (i = dststart; i < dstend; ++i) {
+      if (i >= align2 && i < align2 + len) {
+        i = align2 + len - 1;
+        continue;
       }
-      #ifndef DEBUG
-      assert_false(srcstart < align2 && memcmp(p2 + srcstart, p1 + srcstart, (srcend > align2 ? align2 : srcend) - srcstart));
-      #else
-      if (srcstart < align2 && memcmp(p2 + srcstart, p1 + srcstart, (srcend > align2 ? align2 : srcend) - srcstart)) {
-        fprintf(stderr, "Iteration %zd - garbage before dst, %s (%zd, %zd, %zd)",
-		     n, impl->name, align1, align2, len);
-	      ret = 1;
-	      break;
+      if (i >= srcstart && i < srcend) {
+        i = srcend - 1;
+        continue;
       }
-      #endif
-
-      i = srcstart > align2 + len ? srcstart : align2 + len;
-      #ifndef DEBUG
-      assert_false(srcend > align2 + len && memcmp(p2 + i, p1 + i, srcend - i));
-      #else
-      if (srcend > align2 + len && memcmp(p2 + i, p1 + i, srcend - i)) {
-        fprintf(stderr, "Iteration %zd - garbage after dst, %s (%zd, %zd, %zd)",
-		     n, impl->name, align1, align2, len);
-	      ret = 1;
-	      break;
-      }
-      #endif
+      assert_int_equal(p2[i], c);
     }
+    if (srcstart < align2)
+      assert_memory_equal(p2 + srcstart, p1 + srcstart,
+                          (srcend > align2 ? align2 : srcend) - srcstart);
+
+    i = srcstart > align2 + len ? srcstart : align2 + len;
+    if (srcend > align2 + len)
+      assert_memory_equal(p2 + i, p1 + i, srcend - i);
   }
 }
 
-static void do_test2(void) {
+static void do_test2(impl_t *impl) {
   size_t size = 0x20000000;
   uint32_t *large_buf;
-//                         0x120000000
-//                         0x10d66f000
-  large_buf = mmap((void *)0x100000000, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
-  // large_buf = mmap(0, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
+  large_buf = mmap((void *)0x100000000, size, PROT_READ | PROT_WRITE,
+                   MAP_PRIVATE | MAP_ANON, -1, 0);
 
   if (large_buf == MAP_FAILED) {
+#ifdef DEBUG
     fputs("Large mmap failed", stderr);
+#endif
     ret = 1;
-    #ifndef DEBUG
-    assert_int_not_equal(large_buf, MAP_FAILED);
-    #endif
+    assert_false(ret);
     return;
   }
 
   if ((uintptr_t)large_buf > 0x120000000 - 128 ||
       0x120000000 - (uintptr_t)large_buf > 0x20000000) {
+#ifdef DEBUG
     fputs("Large mmap allocated improperly", stderr);
+#endif
     ret = 1;
     munmap((void *)large_buf, size);
-    #ifndef DEBUG
-    assert_false((uintptr_t)large_buf>0x120000000-128||0x120000000-(uintptr_t)large_buf>0x20000000);
-    #endif
+    assert_false(ret);
     return;
   }
 
@@ -246,110 +177,106 @@ static void do_test2(void) {
   size_t arr_size = bytes_move / sizeof(uint32_t);
   size_t i;
 
-  FOR_EACH_IMPL(impl, 0) {
-    for (i = 0; i < arr_size; i++)
-      large_buf[i] = (uint32_t)i;
+  for (i = 0; i < arr_size; i++)
+    large_buf[i] = (uint32_t)i;
 
-    uint32_t *dst = &large_buf[33];
+  uint32_t *dst = &large_buf[33];
 
-    CALL(impl, (char *)dst, (char *)large_buf, bytes_move);
+  CALL(impl, (char *)dst, (char *)large_buf, bytes_move);
 
-    for (i = 0; i < arr_size; i++) {
-      #ifndef DEBUG
-      assert_int_equal(dst[i], (uint32_t)i);
-      #else
-      if (dst[i] != (uint32_t)i) {
-        fprintf(stderr, "Wrong result in function %s dst \"%p\" src \"%p\" offset \"%zd\"",
-		     impl->name, dst, large_buf, i);
-	      ret = 1;
-	      break;
-      }
-      #endif
-    }
+  for (i = 0; i < arr_size; i++) {
+    assert_int_equal(dst[i], (uint32_t)i);
   }
 
   munmap((void *)large_buf, size);
 }
 
-void test_group_one(void **state __unused) {
-  for (size_t i = 0; i < 14; ++i) {
-    do_test(0, 32, 1 << i);
-    do_test(32, 0, 1 << i);
-    do_test(0, i, 1 << i);
-    do_test(i, 0, 1 << i);
-  }
-}
+int memmove_test(void **state) {
+  s_tstbuf *tst = (s_tstbuf *)(*state);
+  size_t i;
 
-void test_group_two(void **state __unused) {
-  for (size_t i = 0; i < 32; ++i) {
-    do_test(0, 32, i);
-    do_test(32, 0, i);
-    do_test(0, i, i);
-    do_test(i, 0, i);
+  for (i = 0; i < 14; ++i) {
+    do_test(tst->impl, 0, 32, 1 << i);
+    do_test(tst->impl, 32, 0, 1 << i);
+    do_test(tst->impl, 0, i, 1 << i);
+    do_test(tst->impl, i, 0, 1 << i);
   }
-}
 
-void test_group_three(void **state __unused) {
-  for (size_t i = 3; i < 32; ++i) {
+  for (i = 0; i < 32; ++i) {
+    do_test(tst->impl, 0, 32, i);
+    do_test(tst->impl, 32, 0, i);
+    do_test(tst->impl, 0, i, i);
+    do_test(tst->impl, i, 0, i);
+  }
+
+  for (i = 3; i < 32; ++i) {
     if ((i & (i - 1)) == 0)
       continue;
-    do_test(0, 32, 16 * i);
-    do_test(32, 0, 16 * i);
-    do_test(0, i, 16 * i);
-    do_test(i, 0, 16 * i);
+    do_test(tst->impl, 0, 32, 16 * i);
+    do_test(tst->impl, 32, 0, 16 * i);
+    do_test(tst->impl, 0, i, 16 * i);
+    do_test(tst->impl, i, 0, 16 * i);
   }
+
+  do_random_tests(tst->impl);
+
+  do_test2(tst->impl);
+  return tst->ret;
 }
 
-void test_group_four(void **state __unused) {
-  do_random_tests();
-}
-
-void test_group_five(void **state __unused) {
-  do_test2();
-}
-
-int test_deinit(void **state __unused) {
-  int ret;
-  ret = munmap(buf1, (BUF1PAGES+1)*page_size);
-  ret |= munmap(buf2, 2 * page_size);
-  return ret;
-}
-int memmove_tests(void) {
-  impl_t *fbf = calloc(5, sizeof(*fbf));
-  fbf[0] = tst_A_memmove;
-  fbf[1] = tst_ft_memmove;
-  fbf[2] = tst_simple_memmove;
-  fbf[3] = tst_memmove;
-  fbf[4] = tst_memmove;
-
-  __start_impls = fbf;
-
-  __stop_impls = fbf+3;
-
+int test_setup(void **state) {
   test_init();
+  s_tstbuf *buf = calloc(1, sizeof(*buf));
+  if (buf == NULL)
+    return 1;
+  buf->buf1 = buf1;
+  buf->buf2 = buf2;
+  buf->do_srandom = do_srandom;
+  buf->page_size = page_size;
+  buf->ret = ret = 0;
+  buf->seed = seed;
+  *state = buf;
+  return 0;
+}
 
-  #ifndef DEBUG
+int test_teardown(void **state) {
+  s_tstbuf *tmp = (s_tstbuf *)(*state);
+  if (munmap(tmp->buf1, (BUF1PAGES + 1) * page_size))
+    return 1;
+  if (munmap(tmp->buf2, 2 * page_size))
+    return 1;
+  free(tmp);
+  return 0;
+}
+
+void test_ft_memmove(void **state) {
+  s_tstbuf *tst = (s_tstbuf *)(*state);
+  tst->impl = &tst_ft_memmove;
+  tst->ret |= memmove_test(state);
+}
+
+void test_simple_memmove(void **state) {
+  s_tstbuf *tst = (s_tstbuf *)(*state);
+  tst->impl = &tst_simple_memmove;
+  tst->ret |= memmove_test(state);
+}
+
+void test_memmove(void **state) {
+  s_tstbuf *tst = (s_tstbuf *)(*state);
+  tst->impl = &tst_memmove;
+  tst->ret |= memmove_test(state);
+}
+
+int memmove_tests(void) {
   const struct CMUnitTest memmove_tests[] = {
-    cmocka_unit_test(test_group_one),
-    cmocka_unit_test(test_group_two),
-    cmocka_unit_test(test_group_three),
-    cmocka_unit_test(test_group_four),
-    cmocka_unit_test(test_group_five),
+      cmocka_unit_test(test_ft_memmove),
+      cmocka_unit_test(test_simple_memmove),
+      cmocka_unit_test(test_memmove),
   };
-  ret |= cmocka_run_group_tests(memmove_tests, NULL, NULL);
-  #else
-  test_group_one(0);
-  test_group_two(0);
-  test_group_three(0);
-  test_group_four(0);
-  test_group_five(0);
-  #endif
-  test_deinit(0);
-  return ret;
+
+  return cmocka_run_group_tests(memmove_tests, test_setup, test_teardown);
 }
 
 #ifdef SINGLE_TEST
-int test_main(void) {
-  return memmove_tests();
-}
+int test_main(void) { return memmove_tests(); }
 #endif

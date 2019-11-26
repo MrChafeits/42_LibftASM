@@ -9,5 +9,5 @@ _ft_isprint: ; PROC
         xor     eax, eax                ; clear return value
         cmp     edi, 95
         setb    al                      ; return 1 if 0 <= (c - ' ') < 95
-        ret                             ; return to caller
+        ret
 ; _ft_isprint ENDP

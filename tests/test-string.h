@@ -1,13 +1,10 @@
 #include <sys/cdefs.h>
 #include <string.h>
-typedef struct
-{
+typedef struct {
 	const char *name;
 	void (*fn)(void);
 	long test;
 } impl_t;
-
-impl_t *__start_impls, *__stop_impls;
 
 #define IMPL(name, test) \
 	impl_t tst_##name = {__STRING(name), (void (*)(void))name, test};
@@ -35,8 +32,7 @@ impl_t *__start_impls, *__stop_impls;
 // #include <ifunc-impl-list.h>
 #include <stdbool.h>
 #include <stddef.h>
-struct libc_ifunc_impl
-{
+struct libc_ifunc_impl {
 	/* The name of the fucntion to be tested. */
 	const char *name;
 	/* The address of the function to be tested. */
@@ -44,6 +40,14 @@ struct libc_ifunc_impl
 	/* True if this implementation is usable on this machine */
 	bool usable;
 };
+
+typedef struct s_tstbuf {
+  impl_t *impl;
+  unsigned char *buf1, *buf2;
+  int ret, do_srandom;
+  unsigned int seed;
+  size_t page_size;
+} s_tstbuf;
 
 #define TEST_FUNCTION test_main
 #define TIMEOUT (4 * 60)

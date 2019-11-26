@@ -10,5 +10,5 @@ _ft_memset:
         mov     rcx, rdx                ; len
         rep     stosb
         mov     rax, r9                 ; b
-        ret                             ; return to caller
+        ret
 ; _ft_memset ENDP

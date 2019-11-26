@@ -7,6 +7,6 @@ section .text   align=16
 _ft_bzero: ; PROC
         xor     eax, eax                        ; clear out byte to store
         mov     rcx, rsi                        ; n
-        rep     stosb
+        rep     stosb                           ; repeat store string byte
         ret
 ; _ft_bzero ENDP

@@ -23,17 +23,17 @@
 typedef size_t (*proto_t)(const CHAR *, const CHAR *);
 size_t SIMPLE_STRSPN(const CHAR *, const CHAR *);
 size_t STUPID_STRSPN(const CHAR *, const CHAR *);
-extern size_t A_strspn(const CHAR *, const CHAR *);
+extern size_t ft_strspn(const CHAR *, const CHAR *);
 
+IMPL(ft_strspn, 0);
 IMPL(STUPID_STRSPN, 0);
 IMPL(SIMPLE_STRSPN, 0);
-IMPL(A_strspn, 0);
 IMPL(STRSPN, 0);
 
 size_t SIMPLE_STRSPN(const CHAR *s, const CHAR *acc) {
   const CHAR *r, *str = s;
   CHAR c;
-puts("honk");
+
   while ((c = *s++) != '\0') {
     for (r = acc; *r != '\0'; ++r)
       if (*r == c)
@@ -64,7 +64,7 @@ static void do_one_test(impl_t *impl, const CHAR *s, const CHAR *acc,
   assert_int_equal(res, exp_res);
 }
 
-static void do_test(size_t align, size_t pos, size_t len) {
+static void do_test(impl_t *impl, size_t align, size_t pos, size_t len) {
   size_t i;
   CHAR *acc, *s;
 
@@ -95,10 +95,10 @@ static void do_test(size_t align, size_t pos, size_t len) {
     s[i] = '\0';
   }
 
-  FOR_EACH_IMPL(impl, 0) { do_one_test(impl, s, acc, pos); }
+  do_one_test(impl, s, acc, pos);
 }
 
-static void do_random_tests(void) {
+static void do_random_tests(impl_t *impl) {
   size_t i, j, n, align, pos, alen, len;
   UCHAR *p = (UCHAR *)(buf1 + page_size) - 512;
   UCHAR *acc;
@@ -144,78 +144,92 @@ static void do_random_tests(void) {
         p[i] = acc[random() % alen];
     }
 
-    FOR_EACH_IMPL(impl, 1) {
-      assert_int_equal(CALL(impl, (CHAR *)(p + align), (CHAR *)acc), (pos < len ? pos : len));
-    }
+    assert_int_equal(CALL(impl, (CHAR *)(p + align), (CHAR *)acc), (pos < len ? pos : len));
   }
 }
 
-void test_group_one(void **state __unused) {
+int test_setup(void **state) {
+  test_init();
+  s_tstbuf *buf = calloc(1, sizeof(*buf));
+  if (buf == NULL)
+    return 1;
+  buf->buf1 = buf1;
+  buf->buf2 = buf2;
+  buf->do_srandom = do_srandom;
+  buf->page_size = page_size;
+  buf->ret = ret;
+  buf->seed = seed;
+  *state = buf;
+  return 0;
+}
+
+int test_teardown(void **state) {
+  s_tstbuf *tmp = (s_tstbuf*)(*state);
+  if (munmap(tmp->buf1, (BUF1PAGES+1)*page_size))
+    return 1;
+  if (munmap(tmp->buf2, 2*page_size))
+    return 1;
+  free(tmp);
+  return 0;
+}
+
+int strspn_test(void **state) {
+  s_tstbuf *tst = (s_tstbuf*)(*state);
   size_t i;
 
   for (i = 0; i < 32; ++i) {
-    do_test(0, 512, i);
-    do_test(i, 512, i);
+    do_test(tst->impl, 0, 512, i);
+    do_test(tst->impl, i, 512, i);
   }
-}
-
-void test_group_two(void **state __unused) {
-  size_t i;
 
   for (i = 1; i < 8; ++i) {
-    do_test(0, 16 << i, 4);
-    do_test(i, 16 << i, 4);
+    do_test(tst->impl, 0, 16 << i, 4);
+    do_test(tst->impl, i, 16 << i, 4);
   }
-}
-
-void test_group_three(void **state __unused) {
-  size_t i;
 
   for (i = 1; i < 8; ++i)
-    do_test(i, 64, 10);
-}
-
-void test_group_four(void **state __unused) {
-  size_t i;
+    do_test(tst->impl, i, 64, 10);
 
   for (i = 0; i < 64; ++i)
-    do_test(0, i, 6);
+    do_test(tst->impl, 0, i, 6);
+
+  do_random_tests(tst->impl);
+  return 0;
 }
 
-void test_group_five(void **state __unused) {
-  do_random_tests();
+void test_ft_strspn(void **state) {
+  s_tstbuf *tst = (s_tstbuf*)(*state);
+  tst->impl = &tst_ft_strspn;
+  tst->ret |= strspn_test(state);
 }
 
-void test_deinit(void **state __unused) {
-  munmap(buf1, (BUF1PAGES+1)*page_size);
-  munmap(buf2, 2 * page_size);
+void test_SIMPLE_STRSPN(void **state) {
+  s_tstbuf *tst = (s_tstbuf*)(*state);
+  tst->impl = &tst_SIMPLE_STRSPN;
+  tst->ret |= strspn_test(state);
+}
+
+void test_STUPID_STRSPN(void **state) {
+  s_tstbuf *tst = (s_tstbuf*)(*state);
+  tst->impl = &tst_STUPID_STRSPN;
+  tst->ret |= strspn_test(state);
+}
+
+void test_STRSPN(void **state) {
+  s_tstbuf *tst = (s_tstbuf*)(*state);
+  tst->impl = &tst_STRSPN;
+  tst->ret |= strspn_test(state);
 }
 
 int strspn_tests(void) {
-  __start_impls = calloc(4, sizeof(*__start_impls));
-  __start_impls[0] = tst_A_strspn;
-  __start_impls[1] = tst_SIMPLE_STRSPN;
-  __start_impls[2] = tst_STUPID_STRSPN;
-  __start_impls[3] = tst_STRSPN;
-
-  __stop_impls = calloc(4, sizeof(*__stop_impls));
-  __stop_impls[0] = tst_STRSPN;
-  __stop_impls[1] = tst_STRSPN;
-  __stop_impls[2] = tst_STRSPN;
-  __stop_impls[3] = tst_STRSPN;
-
-  test_init();
-
   const struct CMUnitTest strspn_tests[] = {
-    cmocka_unit_test(test_group_one),
-    cmocka_unit_test(test_group_two),
-    cmocka_unit_test(test_group_three),
-    cmocka_unit_test(test_group_four),
-    cmocka_unit_test(test_group_five),
+    cmocka_unit_test(test_ft_strspn),
+    cmocka_unit_test(test_SIMPLE_STRSPN),
+    cmocka_unit_test(test_STUPID_STRSPN),
+    cmocka_unit_test(test_STRSPN),
   };
-  ret |= cmocka_run_group_tests(strspn_tests, NULL, NULL);
-  test_deinit(0);
-  return ret;
+
+  return cmocka_run_group_tests(strspn_tests, test_setup, test_teardown);
 }
 
 #ifdef SINGLE_TEST

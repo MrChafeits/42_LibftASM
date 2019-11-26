@@ -10,5 +10,5 @@ _ft_toupper:
         and     eax, 95                 ;
         cmp     ecx, 25                 ;
         cmova   eax, edi                ;
-        ret                             ; Return to caller
+        ret
 ; _ft_toupper ENDP;

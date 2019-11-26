@@ -9,5 +9,5 @@ _ft_isdigit: ; PROC
         xor     eax, eax                ; clear out return register
         cmp     edi, 10
         setb    al                      ; return 1 if 0 <= edi < 10
-        ret                             ; return to caller
+        ret
 ; _ft_isdigit ENDP

@@ -10,5 +10,5 @@ _ft_isalpha: ; PROC
         xor     eax, eax                ; clear out return register
         cmp     edi, 26
         setb    al                      ; return 1 if edi < 26
-        ret                             ; return to caller
+        ret
 ; _ft_isalpha ENDP

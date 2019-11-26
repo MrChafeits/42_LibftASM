@@ -1,5 +1,3 @@
-#include <string.h>
-
 // Cmocka needs these
 // clang-format off
 #include <setjmp.h>
@@ -8,91 +6,274 @@
 #include <cmocka.h>
 // clang-format on
 
-#pragma mark - Definitions -
+#ifndef MEMCPY_RESULT
+#define MEMCPY_RESULT(dst, len) dst
+#define MIN_PAGE_SIZE 131072
+#define TEST_MAIN
+#define TEST_NAME "memcpy"
+#include "test-string.h"
 
-#define N 80
-typedef void *(*proto_t)(void *restrict dst, const void *restrict src, size_t n);
+char *simple_memcpy(char *, const char *, size_t);
+char *builtin_memcpy(char *, const char *, size_t);
+extern void *ft_memcpy(void *, const void *, size_t);
 
-#pragma mark - Declarations -
+IMPL(simple_memcpy, 0)
+IMPL(builtin_memcpy, 0)
+IMPL(ft_memcpy, 1)
+IMPL(memcpy, 1)
 
-//! Must use repeat string operation
-extern void *ft_memcpy(void *restrict dst, const void *restrict src, size_t n);
-
-//! Faster versions utilizing AVX instructions
-extern void *A_memcpy(void *restrict dst, const void *restrict src, size_t n);
-
-static proto_t arr[] = {
-	ft_memcpy,
-	A_memcpy,
-};
-static char buf[512];
-
-#pragma mark - Private Functions -
-
-static void *aligned(void *p)
-{
-	return (void *)(((intptr_t)p + 63) & -64);
+char *simple_memcpy(char *dst, const char *src, size_t n) {
+  char *ret = dst;
+  while (n--)
+    *dst++ = *src++;
+  return ret;
 }
 
-static void test_align(proto_t fn, unsigned dalign, unsigned salign, size_t len)
-{
-	char *src = aligned(buf);
-	char *dst = aligned(buf + 128);
-	char *want = aligned(buf + 256);
-	char *p;
-	unsigned i;
+char *builtin_memcpy(char *dst, const char *src, size_t n) {
+  return __builtin_memcpy(dst, src, n);
+}
+#endif
 
-	assert_false(salign + len > N);
-	assert_false(dalign + len > N);
+typedef char *(*proto_t)(char *, const char *, size_t);
 
-	for (i = 0; i < N; i++)
-	{
-		src[i] = '#';
-		dst[i] = want[i] = ' ';
-	}
+static void do_one_test(impl_t *impl, char *dst, const char *src, size_t len) {
+  size_t i;
 
-	for (i = 0; i < len; i++)
-	{
-		src[salign + i] = want[dalign + i] = '0' + (char)i;
-	}
+  /* Must clear the destination buffer set by the previous run.  */
+  for (i = 0; i < len; i++)
+    dst[i] = 0;
 
-	p = fn(dst + dalign, src + salign, len);
+  assert_int_equal(CALL(impl, dst, src, len), MEMCPY_RESULT(dst, len));
 
-	assert_ptr_equal(p, dst + dalign);
-
-	for (i = 0; i < N; i++)
-	{
-		assert_int_equal(dst[i], want[i]);
-	}
+  assert_memory_equal(dst, src, len);
 }
 
-static void memcpy_aligned_test(void __unused **state)
-{
-	for (size_t n = 0; n < sizeof(arr) / sizeof(*arr); ++n)
-	{
-		for (unsigned i = 0; i < 16; i++)
-		{
-			for (unsigned j = 0; j < 16; j++)
-			{
-				for (size_t k = 0; k < 64; k++)
-				{
-					test_align(arr[n], i, j, k);
-				}
-			}
-		}
-	}
+static void do_test(impl_t *impl, size_t align1, size_t align2, size_t len) {
+  size_t i, j;
+  char *s1, *s2;
+
+  align1 &= 63;
+  if (align1 + len >= page_size)
+    return;
+
+  align2 &= 63;
+  if (align2 + len >= page_size)
+    return;
+
+  s1 = (char *)(buf1 + align1);
+  s2 = (char *)(buf2 + align2);
+
+  for (i = 0, j = 1; i < len; i++, j += 23)
+    s1[i] = j;
+
+  do_one_test(impl, s2, s1, len);
 }
 
-#pragma mark - Public Functions -
+static void do_random_tests(impl_t *impl) {
+  size_t i, j, n, align1, align2, len, size1, size2, size;
+  int c;
+  unsigned char *p1, *p2;
+  unsigned char *res;
 
-int memcpy_tests(void)
-{
-	const struct CMUnitTest memcpy_tests[] = {cmocka_unit_test(memcpy_aligned_test)};
+  for (n = 0; n < ITERATIONS; n++) {
+    if (n == 0) {
+      len = getpagesize();
+      size = len + 512;
+      size1 = size;
+      size2 = size;
+      align1 = 512;
+      align2 = 512;
+    } else {
+      if ((random() & 255) == 0)
+        size = 65536;
+      else
+        size = 768;
+      if (size > page_size)
+        size = page_size;
+      size1 = size;
+      size2 = size;
+      i = random();
+      if (i & 3)
+        size -= 256;
+      if (i & 1)
+        size1 -= 256;
+      if (i & 2)
+        size2 -= 256;
+      if (i & 4) {
+        len = random() % size;
+        align1 = size1 - len - (random() & 31);
+        align2 = size2 - len - (random() & 31);
+        if (align1 > size1)
+          align1 = 0;
+        if (align2 > size2)
+          align2 = 0;
+      } else {
+        align1 = random() & 63;
+        align2 = random() & 63;
+        len = random() % size;
+        if (align1 + len > size1)
+          align1 = size1 - len;
+        if (align2 + len > size2)
+          align2 = size2 - len;
+      }
+    }
+    p1 = buf1 + page_size - size1;
+    p2 = buf2 + page_size - size2;
+    c = random() & 255;
+    j = align1 + len + 256;
+    if (j > size1)
+      j = size1;
+    for (i = 0; i < j; ++i)
+      p1[i] = random() & 255;
 
-	return cmocka_run_group_tests(memcpy_tests, NULL, NULL);
+    j = align2 + len + 256;
+    if (j > size2)
+      j = size2;
+    memset(p2, c, j);
+    res = (unsigned char *)CALL(impl, (char *)(p2 + align2),
+                                (char *)(p1 + align1), len);
+
+    assert_int_equal(res, MEMCPY_RESULT(p2 + align2, len));
+
+    for (i = 0; i < align2; ++i)
+      assert_int_equal(p2[i], c);
+
+    for (i = align2 + len; i < j; ++i)
+      assert_int_equal(p2[i], c);
+
+    assert_memory_equal(p1 + align1, p2 + align2, len);
+  }
 }
+
+static void do_test1(impl_t *impl) {
+  size_t size = 0x100000;
+  void *large_buf;
+
+  large_buf = mmap(NULL, size * 2 + page_size, PROT_READ | PROT_WRITE,
+                   MAP_PRIVATE | MAP_ANON, -1, 0);
+  if (large_buf == MAP_FAILED) {
+    puts("Failed to allocat large_buf, skipping do_test1");
+    return;
+  }
+
+  if (mprotect(large_buf + size, page_size, PROT_NONE))
+    error(EXIT_FAILURE, errno, "mprotect failed");
+
+  size_t arrary_size = size / sizeof(uint32_t);
+  uint32_t *dest = large_buf;
+  uint32_t *src = large_buf + size + page_size;
+  size_t i;
+
+  for (i = 0; i < arrary_size; i++)
+    src[i] = (uint32_t)i;
+
+  memset(dest, -1, size);
+  CALL(impl, (char *)dest, (char *)src, size);
+  for (i = 0; i < arrary_size; i++)
+    assert_int_equal(dest[i], src[i]);
+
+  munmap((void *)dest, size);
+  munmap((void *)src, size);
+}
+
+int memcpy_test(void **state) {
+  s_tstbuf *tst = (s_tstbuf*)(*state);
+  size_t i;
+
+  test_init();
+
+  for (i = 0; i < 18; ++i) {
+    do_test(tst->impl, 0, 0, 1 << i);
+    do_test(tst->impl, i, 0, 1 << i);
+    do_test(tst->impl, 0, i, 1 << i);
+    do_test(tst->impl, i, i, 1 << i);
+  }
+
+  for (i = 0; i < 32; ++i) {
+    do_test(tst->impl, 0, 0, i);
+    do_test(tst->impl, i, 0, i);
+    do_test(tst->impl, 0, i, i);
+    do_test(tst->impl, i, i, i);
+  }
+
+  for (i = 3; i < 32; ++i) {
+    if ((i & (i - 1)) == 0)
+      continue;
+    do_test(tst->impl, 0, 0, 16 * i);
+    do_test(tst->impl, i, 0, 16 * i);
+    do_test(tst->impl, 0, i, 16 * i);
+    do_test(tst->impl, i, i, 16 * i);
+  }
+
+  do_test(tst->impl, 0, 0, getpagesize());
+
+  do_random_tests(tst->impl);
+
+  do_test1(tst->impl);
+  tst->ret = ret;
+  return tst->ret;
+}
+
+int test_setup(void **state) {
+  test_init();
+  s_tstbuf *buf = calloc(1, sizeof(*buf));
+  if (buf == NULL)
+    return 1;
+  buf->buf1 = buf1;
+  buf->buf2 = buf2;
+  buf->do_srandom = do_srandom;
+  buf->page_size = page_size;
+  buf->ret = ret = 0;
+  buf->seed = seed;
+  *state = buf;
+  return 0;
+}
+
+int test_teardown(void **state) {
+  s_tstbuf *tmp = (s_tstbuf*)(*state);
+  if (munmap(tmp->buf1, (BUF1PAGES+1)*page_size))
+    return 1;
+  if (munmap(tmp->buf2, 2*page_size))
+    return 1;
+  free(tmp);
+  return 0;
+}
+
+void test_ft_memcpy(void **state) {
+  s_tstbuf *tst = (s_tstbuf*)(*state);
+  tst->impl = &tst_ft_memcpy;
+  tst->ret |= memcpy_test(state);
+}
+
+void test_simple_memcpy(void **state) {
+  s_tstbuf *tst = (s_tstbuf*)(*state);
+  tst->impl = &tst_simple_memcpy;
+  tst->ret |= memcpy_test(state);
+}
+
+void test_builtin_memcpy(void **state) {
+  s_tstbuf *tst = (s_tstbuf*)(*state);
+  tst->impl = &tst_builtin_memcpy;
+  tst->ret |= memcpy_test(state);
+}
+
+void test_memcpy(void **state) {
+  s_tstbuf *tst = (s_tstbuf*)(*state);
+  tst->impl = &tst_memcpy;
+  tst->ret |= memcpy_test(state);
+}
+
+int memcpy_tests(void) {
+  const struct CMUnitTest memcpy_tests[] = {
+    cmocka_unit_test(test_ft_memcpy),
+    cmocka_unit_test(test_simple_memcpy),
+    cmocka_unit_test(test_builtin_memcpy),
+    cmocka_unit_test(test_memcpy),
+  };
+
+  return cmocka_run_group_tests(memcpy_tests, test_setup, test_teardown);
+}
+
 #ifdef SINGLE_TEST
-int test_main(void) {
-	return memcpy_tests();
-}
+int test_main(void) { return memcpy_tests(); }
 #endif

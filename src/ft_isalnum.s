@@ -14,5 +14,5 @@ _ft_isalnum: ; PROC
         setb    cl                      ; isalpha
         or      cl, al                  ; combine results
         movzx   eax, cl                 ; move result into return register
-        ret                             ; Return to caller
+        ret
 ; _ft_isalnum ENDP

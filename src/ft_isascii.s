@@ -8,5 +8,5 @@ _ft_isascii: ; PROC
         xor     eax, eax                ; clear return value
         cmp     edi, 128                ; check
         setb    al                      ; return 1 if 0 <= c <= 127
-        ret                             ; return to caller
+        ret
 ; _ft_isascii ENDP
