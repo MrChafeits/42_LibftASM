@@ -55,7 +55,7 @@ static void do_one_test(impl_t *impl, const CHAR *s1, const CHAR *s2,
     return;
 }
 
-static void do_test(impl_t *impl, size_t align1, size_t align2, size_t len,
+static void do_test(s_tstbuf *tst, size_t align1, size_t align2, size_t len,
                     int exp_result) {
   size_t i;
   CHAR *s1, *s2;
@@ -64,15 +64,15 @@ static void do_test(impl_t *impl, size_t align1, size_t align2, size_t len,
     return;
 
   align1 &= 63;
-  if (align1 + (len + 1) * CHARBYTES >= page_size)
+  if (align1 + (len + 1) * CHARBYTES >= tst->page_size)
     return;
 
   align2 &= 63;
-  if (align2 + (len + 1) * CHARBYTES >= page_size)
+  if (align2 + (len + 1) * CHARBYTES >= tst->page_size)
     return;
 
-  s1 = (CHAR *)(buf1 + align1);
-  s2 = (CHAR *)(buf2 + align2);
+  s1 = (CHAR *)(tst->buf1 + align1);
+  s2 = (CHAR *)(tst->buf2 + align2);
 
   for (i = 0; i < len; i++)
     s1[i] = s2[i] = 1 + (23 << ((CHARBYTES - 1) * 8)) * i % CHAR_MAX;
@@ -81,15 +81,15 @@ static void do_test(impl_t *impl, size_t align1, size_t align2, size_t len,
   s2[len] = align2;
   s2[len - 1] -= exp_result;
 
-  do_one_test(impl, s1, s2, len, exp_result);
+  do_one_test(tst->impl, s1, s2, len, exp_result);
 }
 
-static void do_random_tests(impl_t *impl) {
+static void do_random_tests(s_tstbuf *tst) {
   size_t i, j, n, align1, align2, pos, len;
   int result;
   long r;
-  UCHAR *p1 = (UCHAR *)(buf1 + page_size - 512 * CHARBYTES);
-  UCHAR *p2 = (UCHAR *)(buf2 + page_size - 512 * CHARBYTES);
+  UCHAR *p1 = (UCHAR *)(tst->buf1 + tst->page_size - 512 * CHARBYTES);
+  UCHAR *p2 = (UCHAR *)(tst->buf2 + tst->page_size - 512 * CHARBYTES);
 
   for (n = 0; n < ITERATIONS; n++) {
     align1 = random() & 31;
@@ -131,7 +131,7 @@ static void do_random_tests(impl_t *impl) {
         result = 1;
     }
 
-    r = CALL(impl, (CHAR *)p1 + align1, (const CHAR *)p2 + align2, len);
+    r = CALL(tst->impl, (CHAR *)p1 + align1, (const CHAR *)p2 + align2, len);
     assert_false((r == 0 && result) || (r < 0 && result >= 0) ||
                  (r > 0 && result <= 0));
   }
@@ -171,21 +171,21 @@ static void check1(impl_t *impl) {
 }
 
 /* This test checks that memcmp doesn't overrun buffers.  */
-static void check2(impl_t *impl) {
-  size_t max_length = page_size / sizeof(CHAR);
+static void check2(s_tstbuf *tst) {
+  size_t max_length = tst->page_size / sizeof(CHAR);
 
   /* Initialize buf2 to the same values as buf1.  The bug requires the
      last compared byte to be different.  */
-  memcpy(buf2, buf1, page_size);
-  ((char *)buf2)[page_size - 1] ^= 0x11;
+  memcpy(tst->buf2, tst->buf1, tst->page_size);
+  ((char *)tst->buf2)[tst->page_size - 1] ^= 0x11;
 
   for (size_t length = 1; length < max_length; length++) {
-    CHAR *s1 = (CHAR *)buf1 + max_length - length;
-    CHAR *s2 = (CHAR *)buf2 + max_length - length;
+    CHAR *s1 = (CHAR *)tst->buf1 + max_length - length;
+    CHAR *s2 = (CHAR *)tst->buf2 + max_length - length;
 
     const int exp_result = SIMPLE_MEMCMP(s1, s2, length);
 
-    check_result(impl, s1, s2, length, exp_result);
+    check_result(tst->impl, s1, s2, length, exp_result);
   }
 }
 
@@ -193,39 +193,38 @@ static int memcmp_test(void **state) {
   s_tstbuf *tst = (s_tstbuf *)(*state);
   size_t i;
 
-  check1(tst->impl);
-  check2(tst->impl);
+  check1(tst);
+  check2(tst);
 
   for (i = 1; i < 16; ++i) {
-    do_test(tst->impl, i * CHARBYTES, i * CHARBYTES, i, 0);
-    do_test(tst->impl, i * CHARBYTES, i * CHARBYTES, i, 1);
-    do_test(tst->impl, i * CHARBYTES, i * CHARBYTES, i, -1);
+    do_test(tst, i * CHARBYTES, i * CHARBYTES, i, 0);
+    do_test(tst, i * CHARBYTES, i * CHARBYTES, i, 1);
+    do_test(tst, i * CHARBYTES, i * CHARBYTES, i, -1);
   }
 
   for (i = 0; i < 16; ++i) {
-    do_test(tst->impl, 0, 0, i, 0);
-    do_test(tst->impl, 0, 0, i, 1);
-    do_test(tst->impl, 0, 0, i, -1);
+    do_test(tst, 0, 0, i, 0);
+    do_test(tst, 0, 0, i, 1);
+    do_test(tst, 0, 0, i, -1);
   }
 
   for (i = 1; i < 10; ++i) {
-    do_test(tst->impl, 0, 0, 2 << i, 0);
-    do_test(tst->impl, 0, 0, 2 << i, 1);
-    do_test(tst->impl, 0, 0, 2 << i, -1);
-    do_test(tst->impl, 0, 0, 16 << i, 0);
-    do_test(tst->impl, (8 - i) * CHARBYTES, (2 * i) * CHARBYTES, 16 << i, 0);
-    do_test(tst->impl, 0, 0, 16 << i, 1);
-    do_test(tst->impl, 0, 0, 16 << i, -1);
+    do_test(tst, 0, 0, 2 << i, 0);
+    do_test(tst, 0, 0, 2 << i, 1);
+    do_test(tst, 0, 0, 2 << i, -1);
+    do_test(tst, 0, 0, 16 << i, 0);
+    do_test(tst, (8 - i) * CHARBYTES, (2 * i) * CHARBYTES, 16 << i, 0);
+    do_test(tst, 0, 0, 16 << i, 1);
+    do_test(tst, 0, 0, 16 << i, -1);
   }
 
   for (i = 1; i < 8; ++i) {
-    do_test(tst->impl, i * CHARBYTES, 2 * (i * CHARBYTES), 8 << i, 0);
-    do_test(tst->impl, i * CHARBYTES, 2 * (i * CHARBYTES), 8 << i, 1);
-    do_test(tst->impl, i * CHARBYTES, 2 * (i * CHARBYTES), 8 << i, -1);
+    do_test(tst, i * CHARBYTES, 2 * (i * CHARBYTES), 8 << i, 0);
+    do_test(tst, i * CHARBYTES, 2 * (i * CHARBYTES), 8 << i, 1);
+    do_test(tst, i * CHARBYTES, 2 * (i * CHARBYTES), 8 << i, -1);
   }
 
-  do_random_tests(tst->impl);
-  tst->ret = ret;
+  do_random_tests(tst);
   return tst->ret;
 }
 

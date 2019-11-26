@@ -34,8 +34,6 @@ static void strcat_test(void **state) {
     test_strcat(arr[ii], state);
 }
 
-#pragma mark - Public Functions -
-
 int strcat_tests(void) {
   const struct CMUnitTest strcat_tests[] = {
       cmocka_unit_test(strcat_test),
@@ -43,6 +41,7 @@ int strcat_tests(void) {
 
   return cmocka_run_group_tests(strcat_tests, NULL, NULL);
 }
+
 #ifdef SINGLE_TEST
 int test_main(void) { return strcat_tests(); }
 #endif

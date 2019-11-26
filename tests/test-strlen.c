@@ -15,23 +15,20 @@ extern size_t A_strlen(const char *s);
 extern size_t ft_strlen(const char *s);
 
 static void ft_strlen_test(void **state __unused) {
-	assert_int_equal(ft_strlen(""), 0);
-	assert_int_equal(ft_strlen("a"), 1);
-	assert_int_equal(ft_strlen("ab"), 2);
-	assert_int_equal(ft_strlen("abasildjfaskjdf;askdfuoisudfoiajsdfaf"), 37);
+  assert_int_equal(ft_strlen(""), 0);
+  assert_int_equal(ft_strlen("a"), 1);
+  assert_int_equal(ft_strlen("ab"), 2);
+  assert_int_equal(ft_strlen("abasildjfaskjdf;askdfuoisudfoiajsdfaf"), 37);
 }
-
-#pragma mark - Public Functions -
 
 int strlen_tests(void) {
-	const struct CMUnitTest strlen_tests[] = {
-		cmocka_unit_test(ft_strlen_test),
-	};
+  const struct CMUnitTest strlen_tests[] = {
+      cmocka_unit_test(ft_strlen_test),
+  };
 
-	return cmocka_run_group_tests(strlen_tests, NULL, NULL);
+  return cmocka_run_group_tests(strlen_tests, NULL, NULL);
 }
+
 #ifdef SINGLE_TEST
-int test_main(void) {
-	return strlen_tests();
-}
+int test_main(void) { return strlen_tests(); }
 #endif

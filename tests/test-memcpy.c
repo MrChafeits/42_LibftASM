@@ -48,28 +48,28 @@ static void do_one_test(impl_t *impl, char *dst, const char *src, size_t len) {
   assert_memory_equal(dst, src, len);
 }
 
-static void do_test(impl_t *impl, size_t align1, size_t align2, size_t len) {
+static void do_test(s_tstbuf *tst, size_t align1, size_t align2, size_t len) {
   size_t i, j;
   char *s1, *s2;
 
   align1 &= 63;
-  if (align1 + len >= page_size)
+  if (align1 + len >= tst->page_size)
     return;
 
   align2 &= 63;
-  if (align2 + len >= page_size)
+  if (align2 + len >= tst->page_size)
     return;
 
-  s1 = (char *)(buf1 + align1);
-  s2 = (char *)(buf2 + align2);
+  s1 = (char *)(tst->buf1 + align1);
+  s2 = (char *)(tst->buf2 + align2);
 
   for (i = 0, j = 1; i < len; i++, j += 23)
     s1[i] = j;
 
-  do_one_test(impl, s2, s1, len);
+  do_one_test(tst->impl, s2, s1, len);
 }
 
-static void do_random_tests(impl_t *impl) {
+static void do_random_tests(s_tstbuf *tst) {
   size_t i, j, n, align1, align2, len, size1, size2, size;
   int c;
   unsigned char *p1, *p2;
@@ -88,8 +88,8 @@ static void do_random_tests(impl_t *impl) {
         size = 65536;
       else
         size = 768;
-      if (size > page_size)
-        size = page_size;
+      if (size > tst->page_size)
+        size = tst->page_size;
       size1 = size;
       size2 = size;
       i = random();
@@ -117,8 +117,8 @@ static void do_random_tests(impl_t *impl) {
           align2 = size2 - len;
       }
     }
-    p1 = buf1 + page_size - size1;
-    p2 = buf2 + page_size - size2;
+    p1 = tst->buf1 + tst->page_size - size1;
+    p2 = tst->buf2 + tst->page_size - size2;
     c = random() & 255;
     j = align1 + len + 256;
     if (j > size1)
@@ -130,7 +130,7 @@ static void do_random_tests(impl_t *impl) {
     if (j > size2)
       j = size2;
     memset(p2, c, j);
-    res = (unsigned char *)CALL(impl, (char *)(p2 + align2),
+    res = (unsigned char *)CALL(tst->impl, (char *)(p2 + align2),
                                 (char *)(p1 + align1), len);
 
     assert_int_equal(res, MEMCPY_RESULT(p2 + align2, len));
@@ -145,30 +145,30 @@ static void do_random_tests(impl_t *impl) {
   }
 }
 
-static void do_test1(impl_t *impl) {
+static void do_test1(s_tstbuf *tst) {
   size_t size = 0x100000;
   void *large_buf;
 
-  large_buf = mmap(NULL, size * 2 + page_size, PROT_READ | PROT_WRITE,
+  large_buf = mmap(NULL, size * 2 + tst->page_size, PROT_READ | PROT_WRITE,
                    MAP_PRIVATE | MAP_ANON, -1, 0);
   if (large_buf == MAP_FAILED) {
     puts("Failed to allocat large_buf, skipping do_test1");
     return;
   }
 
-  if (mprotect(large_buf + size, page_size, PROT_NONE))
+  if (mprotect(large_buf + size, tst->page_size, PROT_NONE))
     errc(EXIT_FAILURE, errno, "mprotect failed");
 
   size_t arrary_size = size / sizeof(uint32_t);
   uint32_t *dest = large_buf;
-  uint32_t *src = large_buf + size + page_size;
+  uint32_t *src = large_buf + size + tst->page_size;
   size_t i;
 
   for (i = 0; i < arrary_size; i++)
     src[i] = (uint32_t)i;
 
   memset(dest, -1, size);
-  CALL(impl, (char *)dest, (char *)src, size);
+  CALL(tst->impl, (char *)dest, (char *)src, size);
   for (i = 0; i < arrary_size; i++)
     assert_int_equal(dest[i], src[i]);
 
@@ -177,73 +177,70 @@ static void do_test1(impl_t *impl) {
 }
 
 static int memcpy_test(void **state) {
-  s_tstbuf *tst = (s_tstbuf*)(*state);
+  s_tstbuf *tst = (s_tstbuf *)(*state);
   size_t i;
 
-  test_init();
-
   for (i = 0; i < 18; ++i) {
-    do_test(tst->impl, 0, 0, 1 << i);
-    do_test(tst->impl, i, 0, 1 << i);
-    do_test(tst->impl, 0, i, 1 << i);
-    do_test(tst->impl, i, i, 1 << i);
+    do_test(tst, 0, 0, 1 << i);
+    do_test(tst, i, 0, 1 << i);
+    do_test(tst, 0, i, 1 << i);
+    do_test(tst, i, i, 1 << i);
   }
 
   for (i = 0; i < 32; ++i) {
-    do_test(tst->impl, 0, 0, i);
-    do_test(tst->impl, i, 0, i);
-    do_test(tst->impl, 0, i, i);
-    do_test(tst->impl, i, i, i);
+    do_test(tst, 0, 0, i);
+    do_test(tst, i, 0, i);
+    do_test(tst, 0, i, i);
+    do_test(tst, i, i, i);
   }
 
   for (i = 3; i < 32; ++i) {
     if ((i & (i - 1)) == 0)
       continue;
-    do_test(tst->impl, 0, 0, 16 * i);
-    do_test(tst->impl, i, 0, 16 * i);
-    do_test(tst->impl, 0, i, 16 * i);
-    do_test(tst->impl, i, i, 16 * i);
+    do_test(tst, 0, 0, 16 * i);
+    do_test(tst, i, 0, 16 * i);
+    do_test(tst, 0, i, 16 * i);
+    do_test(tst, i, i, 16 * i);
   }
 
-  do_test(tst->impl, 0, 0, getpagesize());
+  do_test(tst, 0, 0, getpagesize());
 
-  do_random_tests(tst->impl);
+  do_random_tests(tst);
 
-  do_test1(tst->impl);
-  tst->ret = ret;
+  do_test1(tst);
   return tst->ret;
 }
 
 static void test_ft_memcpy(void **state) {
-  s_tstbuf *tst = (s_tstbuf*)(*state);
+  s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_ft_memcpy;
   tst->ret |= memcpy_test(state);
 }
 
 static void test_simple_memcpy(void **state) {
-  s_tstbuf *tst = (s_tstbuf*)(*state);
+  s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_simple_memcpy;
   tst->ret |= memcpy_test(state);
 }
 
 static void test_builtin_memcpy(void **state) {
-  s_tstbuf *tst = (s_tstbuf*)(*state);
+  s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_builtin_memcpy;
   tst->ret |= memcpy_test(state);
 }
 
 static void test_memcpy(void **state) {
-  s_tstbuf *tst = (s_tstbuf*)(*state);
+  s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_memcpy;
   tst->ret |= memcpy_test(state);
 }
 
 int memcpy_tests(void) {
   const struct CMUnitTest memcpy_tests[] = {
-    cmocka_unit_test(test_ft_memcpy),
-    cmocka_unit_test(test_simple_memcpy),
-    cmocka_unit_test(test_builtin_memcpy),
-    cmocka_unit_test(test_memcpy),
+      cmocka_unit_test(test_ft_memcpy),
+      cmocka_unit_test(test_simple_memcpy),
+      cmocka_unit_test(test_builtin_memcpy),
+      cmocka_unit_test(test_memcpy),
   };
 
   return cmocka_run_group_tests(memcpy_tests, test_setup, test_teardown);

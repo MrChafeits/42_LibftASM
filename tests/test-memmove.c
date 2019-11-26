@@ -33,40 +33,40 @@ static char *simple_memmove(char *dst, const char *src, size_t n) {
   return ret;
 }
 
-static void do_one_test(impl_t *impl, char *dst, char *src,
+static void do_one_test(s_tstbuf *tst, char *dst, char *src,
                         const char *orig_src, size_t len) {
   /* This also clears the destination buffer set by the previous run.  */
   memcpy(src, orig_src, len);
   char *res;
 
-  res = CALL(impl, dst, src, len);
+  res = CALL(tst->impl, dst, src, len);
   assert_int_equal(res, dst);
 
   assert_memory_equal(dst, orig_src, len);
 }
 
-static void do_test(impl_t *impl, size_t align1, size_t align2, size_t len) {
+static void do_test(s_tstbuf *tst, size_t align1, size_t align2, size_t len) {
   size_t i, j;
   char *s1, *s2;
 
   align1 &= 63;
-  if (align1 + len >= page_size)
+  if (align1 + len >= tst->page_size)
     return;
 
   align2 &= 63;
-  if (align2 + len >= page_size)
+  if (align2 + len >= tst->page_size)
     return;
 
-  s1 = (char *)(buf1 + align1);
-  s2 = (char *)(buf2 + align2);
+  s1 = (char *)(tst->buf1 + align1);
+  s2 = (char *)(tst->buf2 + align2);
 
   for (i = 0, j = 1; i < len; i++, j += 23)
     s1[i] = j;
 
-  do_one_test(impl, s2, (char *)(buf2 + align1), s1, len);
+  do_one_test(tst->impl, s2, (char *)(tst->buf2 + align1), s1, len);
 }
 
-static void do_random_tests(impl_t *impl) {
+static void do_random_tests(s_tstbuf *tst) {
   size_t i, n, align1, align2, len, size;
   size_t srcstart, srcend, dststart, dstend;
   int c;
@@ -78,8 +78,8 @@ static void do_random_tests(impl_t *impl) {
       size = 65536;
     else
       size = 512;
-    if (size > page_size)
-      size = page_size;
+    if (size > tst->page_size)
+      size = tst->page_size;
     if ((random() & 3) == 0) {
       len = random() & (size - 1);
       align1 = size - len - (random() & 31);
@@ -98,8 +98,8 @@ static void do_random_tests(impl_t *impl) {
         align2 = size - len;
     }
 
-    p1 = buf1 + page_size - size;
-    p2 = buf2 + page_size - size;
+    p1 = tst->buf1 + tst->page_size - size;
+    p2 = tst->buf2 + tst->page_size - size;
     c = random() & 255;
     srcend = align1 + len + 256;
     if (srcend > size)
@@ -120,7 +120,7 @@ static void do_random_tests(impl_t *impl) {
 
     memset(p2 + dststart, c, dstend - dststart);
     memcpy(p2 + srcstart, p1 + srcstart, srcend - srcstart);
-    res = (unsigned char *)CALL(impl, (char *)(p2 + align2),
+    res = (unsigned char *)CALL(tst->impl, (char *)(p2 + align2),
                                 (char *)(p2 + align1), len);
     assert_int_equal(res, p2 + align2);
 
@@ -147,7 +147,7 @@ static void do_random_tests(impl_t *impl) {
   }
 }
 
-static void do_test2(impl_t *impl) {
+static void do_test2(s_tstbuf *tst) {
   size_t size = 0x20000000;
   uint32_t *large_buf;
   large_buf = mmap((void *)0x100000000, size, PROT_READ | PROT_WRITE,
@@ -157,8 +157,8 @@ static void do_test2(impl_t *impl) {
 #ifdef DEBUG
     fputs("Large mmap failed", stderr);
 #endif
-    ret = 1;
-    assert_false(ret);
+    tst->ret = 1;
+    assert_false(tst->ret);
     return;
   }
 
@@ -167,9 +167,9 @@ static void do_test2(impl_t *impl) {
 #ifdef DEBUG
     fputs("Large mmap allocated improperly", stderr);
 #endif
-    ret = 1;
+    tst->ret = 1;
     munmap((void *)large_buf, size);
-    assert_false(ret);
+    assert_false(tst->ret);
     return;
   }
 
@@ -182,7 +182,7 @@ static void do_test2(impl_t *impl) {
 
   uint32_t *dst = &large_buf[33];
 
-  CALL(impl, (char *)dst, (char *)large_buf, bytes_move);
+  CALL(tst->impl, (char *)dst, (char *)large_buf, bytes_move);
 
   for (i = 0; i < arr_size; i++) {
     assert_int_equal(dst[i], (uint32_t)i);
@@ -196,31 +196,31 @@ static int memmove_test(void **state) {
   size_t i;
 
   for (i = 0; i < 14; ++i) {
-    do_test(tst->impl, 0, 32, 1 << i);
-    do_test(tst->impl, 32, 0, 1 << i);
-    do_test(tst->impl, 0, i, 1 << i);
-    do_test(tst->impl, i, 0, 1 << i);
+    do_test(tst, 0, 32, 1 << i);
+    do_test(tst, 32, 0, 1 << i);
+    do_test(tst, 0, i, 1 << i);
+    do_test(tst, i, 0, 1 << i);
   }
 
   for (i = 0; i < 32; ++i) {
-    do_test(tst->impl, 0, 32, i);
-    do_test(tst->impl, 32, 0, i);
-    do_test(tst->impl, 0, i, i);
-    do_test(tst->impl, i, 0, i);
+    do_test(tst, 0, 32, i);
+    do_test(tst, 32, 0, i);
+    do_test(tst, 0, i, i);
+    do_test(tst, i, 0, i);
   }
 
   for (i = 3; i < 32; ++i) {
     if ((i & (i - 1)) == 0)
       continue;
-    do_test(tst->impl, 0, 32, 16 * i);
-    do_test(tst->impl, 32, 0, 16 * i);
-    do_test(tst->impl, 0, i, 16 * i);
-    do_test(tst->impl, i, 0, 16 * i);
+    do_test(tst, 0, 32, 16 * i);
+    do_test(tst, 32, 0, 16 * i);
+    do_test(tst, 0, i, 16 * i);
+    do_test(tst, i, 0, 16 * i);
   }
 
-  do_random_tests(tst->impl);
+  do_random_tests(tst);
 
-  do_test2(tst->impl);
+  do_test2(tst);
   return tst->ret;
 }
 

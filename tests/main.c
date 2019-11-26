@@ -1,6 +1,6 @@
-#include <sys/cdefs.h>
-#include <stdio.h>
 #include <signal.h>
+#include <stdio.h>
+#include <sys/cdefs.h>
 #include <unistd.h>
 
 __BEGIN_DECLS
@@ -26,38 +26,17 @@ extern int strspn_tests(void);
 extern int strcspn_tests(void);
 extern int debugbreak_tests(void);
 const char *signames[] = {
-[0] = "UNKNOWN",
-[SIGHUP] = "SIGHUP",
-[SIGINT] = "SIGINT",
-[SIGQUIT] = "SIGQUIT",
-[SIGILL] = "SIGILL",
-[SIGTRAP] = "SIGTRAP",
-[SIGABRT] = "SIGABRT",
-[SIGEMT] = "SIGEMT",
-[SIGFPE] = "SIGFPE",
-[SIGKILL] = "SIGKILL",
-[SIGBUS] = "SIGBUS",
-[SIGSEGV] = "SIGSEGV",
-[SIGSYS] = "SIGSYS",
-[SIGPIPE] = "SIGPIPE",
-[SIGALRM] = "SIGALRM",
-[SIGTERM] = "SIGTERM",
-[SIGURG] = "SIGURG",
-[SIGSTOP] = "SIGSTOP",
-[SIGTSTP] = "SIGTSTP",
-[SIGCONT] = "SIGCONT",
-[SIGCHLD] = "SIGCHLD",
-[SIGTTIN] = "SIGTTIN",
-[SIGTTOU] = "SIGTTOU",
-[SIGIO] = "SIGIO",
-[SIGXCPU] = "SIGXCPU",
-[SIGXFSZ] = "SIGXFSZ",
-[SIGVTALRM] = "SIGVTALRM",
-[SIGPROF] = "SIGPROF",
-[SIGWINCH] = "SIGWINCH",
-[SIGINFO] = "SIGINFO",
-[SIGUSR1] = "SIGUSR1",
-[SIGUSR2] = "SIGUSR2",
+    [0] = "UNKNOWN",       [SIGHUP] = "SIGHUP",     [SIGINT] = "SIGINT",
+    [SIGQUIT] = "SIGQUIT", [SIGILL] = "SIGILL",     [SIGTRAP] = "SIGTRAP",
+    [SIGABRT] = "SIGABRT", [SIGEMT] = "SIGEMT",     [SIGFPE] = "SIGFPE",
+    [SIGKILL] = "SIGKILL", [SIGBUS] = "SIGBUS",     [SIGSEGV] = "SIGSEGV",
+    [SIGSYS] = "SIGSYS",   [SIGPIPE] = "SIGPIPE",   [SIGALRM] = "SIGALRM",
+    [SIGTERM] = "SIGTERM", [SIGURG] = "SIGURG",     [SIGSTOP] = "SIGSTOP",
+    [SIGTSTP] = "SIGTSTP", [SIGCONT] = "SIGCONT",   [SIGCHLD] = "SIGCHLD",
+    [SIGTTIN] = "SIGTTIN", [SIGTTOU] = "SIGTTOU",   [SIGIO] = "SIGIO",
+    [SIGXCPU] = "SIGXCPU", [SIGXFSZ] = "SIGXFSZ",   [SIGVTALRM] = "SIGVTALRM",
+    [SIGPROF] = "SIGPROF", [SIGWINCH] = "SIGWINCH", [SIGINFO] = "SIGINFO",
+    [SIGUSR1] = "SIGUSR1", [SIGUSR2] = "SIGUSR2",
 };
 void sig_handler(int signo) {
   if (signo >= 0 && signo < 32)
@@ -81,7 +60,8 @@ int test_main(void) {
   result |= strspn_tests();
   result |= strcspn_tests();
   if (signal(SIGTRAP, sig_handler) == SIG_ERR)
-    printf("\ncannot catch SIGTRAP, expect debugbreak_tests to kill the program\n");
+    printf("\ncannot catch SIGTRAP, expect debugbreak_tests to kill the "
+           "program\n");
   result |= debugbreak_tests();
   return result;
 }

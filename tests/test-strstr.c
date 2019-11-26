@@ -12,6 +12,7 @@
 #include "test-string.h"
 
 extern char *ft_strstr(const char *s1, const char *s2);
+
 void *mempcpy(void *dest, const void *src, size_t len) {
   return memcpy(dest, src, len) + len;
 }
@@ -44,9 +45,10 @@ static char *simple_strstr(const char *s1, const char *s2) {
     return (NULL);
   while (*s1) {
     if (*s1 == *s2) {
-      for (ii = 0; (s1[ii] == s2[ii] && s2[ii]); ++ii);
+      for (ii = 0; (s1[ii] == s2[ii] && s2[ii]); ++ii)
+        ;
       if (s2[ii] == '\0')
-        return ((char*)s1);
+        return ((char *)s1);
     }
     s1++;
   }
@@ -60,31 +62,31 @@ IMPL(stupid_strstr, 0)
 IMPL(simple_strstr, 0)
 IMPL(strstr, 1)
 
-static int check_result(impl_t *impl, const char *s1, const char *s2,
+static int check_result(s_tstbuf *tst, const char *s1, const char *s2,
                         char *exp_result) {
-  char *result = CALL(impl, s1, s2);
+  char *result = CALL(tst->impl, s1, s2);
   assert_int_equal(result, exp_result);
   if (result != exp_result) {
-    errc(0, 0, "Wrong result in function %s %s %s", impl->name,
+    errc(0, 0, "Wrong result in function %s %s %s", tst->impl->name,
          (result == NULL) ? "(null)" : result,
          (exp_result == NULL) ? "(null)" : exp_result);
-    ret = 1;
+    tst->ret = 1;
     return -1;
   }
 
   return 0;
 }
 
-static void do_one_test(impl_t *impl, const char *s1, const char *s2,
+static void do_one_test(s_tstbuf *tst, const char *s1, const char *s2,
                         char *exp_result) {
-  if (check_result(impl, s1, s2, exp_result) < 0)
+  if (check_result(tst->impl, s1, s2, exp_result) < 0)
     return;
 }
 
-static void do_test(impl_t *impl, size_t align1, size_t align2, size_t len1,
+static void do_test(s_tstbuf *tst, size_t align1, size_t align2, size_t len1,
                     size_t len2, int fail) {
-  char *s1 = (char *)(buf1 + align1);
-  char *s2 = (char *)(buf2 + align2);
+  char *s1 = (char *)(tst->buf1 + align1);
+  char *s2 = (char *)(tst->buf2 + align2);
 
   static const char d[] = "1234567890abcdef";
 #define dl (sizeof(d) - 1)
@@ -109,10 +111,10 @@ static void do_test(impl_t *impl, size_t align1, size_t align2, size_t len1,
   }
   s1[len1] = '\0';
 
-  do_one_test(impl, s1, s2, fail ? NULL : s1 + len1 - len2);
+  do_one_test(tst->impl, s1, s2, fail ? NULL : s1 + len1 - len2);
 }
 
-static void check1(impl_t *impl) {
+static void check1(s_tstbuf *tst) {
   const char s1[] = "F_BD_CE_BD_EF_BF_BD_EF_BF_BD_EF_BF_BD_EF_BF_BD_C3_88_20_"
                     "EF_BF_BD_EF_BF_BD_EF_BF_BD_C3_A7_20_EF_BF_BD";
   const char s2[] = "_EF_BF_BD_EF_BF_BD_EF_BF_BD_EF_BF_BD_EF_BF_BD";
@@ -120,25 +122,25 @@ static void check1(impl_t *impl) {
 
   exp_result = stupid_strstr(s1, s2);
 
-  check_result(impl, s1, s2, exp_result);
+  check_result(tst->impl, s1, s2, exp_result);
 }
 
-static void check2(impl_t *impl) {
+static void check2(s_tstbuf *tst) {
   const char s1[] = ", enable_static, \0, enable_shared, ";
   char *exp_result;
-  char *s2 = (void *)buf1 + page_size - 18;
+  char *s2 = (void *)tst->buf1 + tst->page_size - 18;
 
   strcpy(s2, s1);
   exp_result = stupid_strstr(s1, s1 + 18);
-  check_result(impl, s1, s1 + 18, exp_result);
-  check_result(impl, s2, s1 + 18, exp_result);
+  check_result(tst->impl, s1, s1 + 18, exp_result);
+  check_result(tst->impl, s2, s1 + 18, exp_result);
 }
 
 #define N 1024
 
-static void pr23637(impl_t *impl) {
-  char *h = (char *)buf1;
-  char *n = (char *)buf2;
+static void pr23637(s_tstbuf *tst) {
+  char *h = (char *)tst->buf1;
+  char *n = (char *)tst->buf2;
 
   for (int i = 0; i < N; i++) {
     n[i] = 'x';
@@ -153,62 +155,62 @@ static void pr23637(impl_t *impl) {
   h[0] = 'x';
 
   char *exp_result = stupid_strstr(h, n);
-  check_result(impl, h, n, exp_result);
+  check_result(tst->impl, h, n, exp_result);
 }
 
 static int strstr_test(void **state) {
   s_tstbuf *tst = (s_tstbuf *)(*state);
 
-  check1(tst->impl);
-  check2(tst->impl);
-  pr23637(tst->impl);
+  check1(tst);
+  check2(tst);
+  pr23637(tst);
 
   for (size_t klen = 2; klen < 32; ++klen)
     for (size_t hlen = 2 * klen; hlen < 16 * klen; hlen += klen) {
-      do_test(tst->impl, 0, 0, hlen, klen, 0);
-      do_test(tst->impl, 0, 0, hlen, klen, 1);
-      do_test(tst->impl, 0, 3, hlen, klen, 0);
-      do_test(tst->impl, 0, 3, hlen, klen, 1);
-      do_test(tst->impl, 0, 9, hlen, klen, 0);
-      do_test(tst->impl, 0, 9, hlen, klen, 1);
-      do_test(tst->impl, 0, 15, hlen, klen, 0);
-      do_test(tst->impl, 0, 15, hlen, klen, 1);
+      do_test(tst, 0, 0, hlen, klen, 0);
+      do_test(tst, 0, 0, hlen, klen, 1);
+      do_test(tst, 0, 3, hlen, klen, 0);
+      do_test(tst, 0, 3, hlen, klen, 1);
+      do_test(tst, 0, 9, hlen, klen, 0);
+      do_test(tst, 0, 9, hlen, klen, 1);
+      do_test(tst, 0, 15, hlen, klen, 0);
+      do_test(tst, 0, 15, hlen, klen, 1);
 
-      do_test(tst->impl, 3, 0, hlen, klen, 0);
-      do_test(tst->impl, 3, 0, hlen, klen, 1);
-      do_test(tst->impl, 3, 3, hlen, klen, 0);
-      do_test(tst->impl, 3, 3, hlen, klen, 1);
-      do_test(tst->impl, 3, 9, hlen, klen, 0);
-      do_test(tst->impl, 3, 9, hlen, klen, 1);
-      do_test(tst->impl, 3, 15, hlen, klen, 0);
-      do_test(tst->impl, 3, 15, hlen, klen, 1);
+      do_test(tst, 3, 0, hlen, klen, 0);
+      do_test(tst, 3, 0, hlen, klen, 1);
+      do_test(tst, 3, 3, hlen, klen, 0);
+      do_test(tst, 3, 3, hlen, klen, 1);
+      do_test(tst, 3, 9, hlen, klen, 0);
+      do_test(tst, 3, 9, hlen, klen, 1);
+      do_test(tst, 3, 15, hlen, klen, 0);
+      do_test(tst, 3, 15, hlen, klen, 1);
 
-      do_test(tst->impl, 9, 0, hlen, klen, 0);
-      do_test(tst->impl, 9, 0, hlen, klen, 1);
-      do_test(tst->impl, 9, 3, hlen, klen, 0);
-      do_test(tst->impl, 9, 3, hlen, klen, 1);
-      do_test(tst->impl, 9, 9, hlen, klen, 0);
-      do_test(tst->impl, 9, 9, hlen, klen, 1);
-      do_test(tst->impl, 9, 15, hlen, klen, 0);
-      do_test(tst->impl, 9, 15, hlen, klen, 1);
+      do_test(tst, 9, 0, hlen, klen, 0);
+      do_test(tst, 9, 0, hlen, klen, 1);
+      do_test(tst, 9, 3, hlen, klen, 0);
+      do_test(tst, 9, 3, hlen, klen, 1);
+      do_test(tst, 9, 9, hlen, klen, 0);
+      do_test(tst, 9, 9, hlen, klen, 1);
+      do_test(tst, 9, 15, hlen, klen, 0);
+      do_test(tst, 9, 15, hlen, klen, 1);
 
-      do_test(tst->impl, 15, 0, hlen, klen, 0);
-      do_test(tst->impl, 15, 0, hlen, klen, 1);
-      do_test(tst->impl, 15, 3, hlen, klen, 0);
-      do_test(tst->impl, 15, 3, hlen, klen, 1);
-      do_test(tst->impl, 15, 9, hlen, klen, 0);
-      do_test(tst->impl, 15, 9, hlen, klen, 1);
-      do_test(tst->impl, 15, 15, hlen, klen, 0);
-      do_test(tst->impl, 15, 15, hlen, klen, 1);
+      do_test(tst, 15, 0, hlen, klen, 0);
+      do_test(tst, 15, 0, hlen, klen, 1);
+      do_test(tst, 15, 3, hlen, klen, 0);
+      do_test(tst, 15, 3, hlen, klen, 1);
+      do_test(tst, 15, 9, hlen, klen, 0);
+      do_test(tst, 15, 9, hlen, klen, 1);
+      do_test(tst, 15, 15, hlen, klen, 0);
+      do_test(tst, 15, 15, hlen, klen, 1);
 
-      do_test(tst->impl, 15, 15, hlen + klen * 4, klen * 4, 0);
-      do_test(tst->impl, 15, 15, hlen + klen * 4, klen * 4, 1);
+      do_test(tst, 15, 15, hlen + klen * 4, klen * 4, 0);
+      do_test(tst, 15, 15, hlen + klen * 4, klen * 4, 1);
     }
 
-  do_test(tst->impl, 0, 0, page_size - 1, 16, 0);
-  do_test(tst->impl, 0, 0, page_size - 1, 16, 1);
+  do_test(tst, 0, 0, tst->page_size - 1, 16, 0);
+  do_test(tst, 0, 0, tst->page_size - 1, 16, 1);
 
-  return ret;
+  return tst->ret;
 }
 
 static void test_ft_strstr(void **state) {

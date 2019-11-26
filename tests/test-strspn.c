@@ -64,16 +64,16 @@ static void do_one_test(impl_t *impl, const CHAR *s, const CHAR *acc,
   assert_int_equal(res, exp_res);
 }
 
-static void do_test(impl_t *impl, size_t align, size_t pos, size_t len) {
+static void do_test(s_tstbuf *tst, size_t align, size_t pos, size_t len) {
   size_t i;
   CHAR *acc, *s;
 
   align &= 7;
-  if ((align + pos + 10) * sizeof(CHAR) >= page_size || len > 240 || !len)
+  if ((align + pos + 10) * sizeof(CHAR) >= tst->page_size || len > 240 || !len)
     return;
 
-  acc = (CHAR *)(buf2) + (random() & 255);
-  s = (CHAR *)(buf1) + align;
+  acc = (CHAR *)(tst->buf2) + (random() & 255);
+  s = (CHAR *)(tst->buf1) + align;
 
   for (i = 0; i < len; ++i) {
     acc[i] = random() & BIG_CHAR;
@@ -95,12 +95,12 @@ static void do_test(impl_t *impl, size_t align, size_t pos, size_t len) {
     s[i] = '\0';
   }
 
-  do_one_test(impl, s, acc, pos);
+  do_one_test(tst->impl, s, acc, pos);
 }
 
-static void do_random_tests(impl_t *impl) {
+static void do_random_tests(s_tstbuf *tst) {
   size_t i, j, n, align, pos, alen, len;
-  UCHAR *p = (UCHAR *)(buf1 + page_size) - 512;
+  UCHAR *p = (UCHAR *)(tst->buf1 + tst->page_size) - 512;
   UCHAR *acc;
 
   for (n = 0; n < ITERATIONS; n++) {
@@ -118,7 +118,7 @@ static void do_random_tests(impl_t *impl) {
     len = random() & 511;
     if (len + align >= 512)
       len = 511 - align - (random() & 7);
-    acc = (UCHAR *)(buf2 + page_size) - alen - 1 - (random() & 7);
+    acc = (UCHAR *)(tst->buf2 + tst->page_size) - alen - 1 - (random() & 7);
     for (i = 0; i < alen; ++i) {
       acc[i] = random() & BIG_CHAR;
       if (!acc[i])
@@ -144,12 +144,13 @@ static void do_random_tests(impl_t *impl) {
         p[i] = acc[random() % alen];
     }
 
-    assert_int_equal(CALL(impl, (CHAR *)(p + align), (CHAR *)acc), (pos < len ? pos : len));
+    assert_int_equal(CALL(tst->impl, (CHAR *)(p + align), (CHAR *)acc),
+                     (pos < len ? pos : len));
   }
 }
 
 int strspn_test(void **state) {
-  s_tstbuf *tst = (s_tstbuf*)(*state);
+  s_tstbuf *tst = (s_tstbuf *)(*state);
   size_t i;
 
   for (i = 0; i < 32; ++i) {
@@ -173,42 +174,40 @@ int strspn_test(void **state) {
 }
 
 void test_ft_strspn(void **state) {
-  s_tstbuf *tst = (s_tstbuf*)(*state);
+  s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_ft_strspn;
   tst->ret |= strspn_test(state);
 }
 
 void test_SIMPLE_STRSPN(void **state) {
-  s_tstbuf *tst = (s_tstbuf*)(*state);
+  s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_SIMPLE_STRSPN;
   tst->ret |= strspn_test(state);
 }
 
 void test_STUPID_STRSPN(void **state) {
-  s_tstbuf *tst = (s_tstbuf*)(*state);
+  s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_STUPID_STRSPN;
   tst->ret |= strspn_test(state);
 }
 
 void test_STRSPN(void **state) {
-  s_tstbuf *tst = (s_tstbuf*)(*state);
+  s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_STRSPN;
   tst->ret |= strspn_test(state);
 }
 
 int strspn_tests(void) {
   const struct CMUnitTest strspn_tests[] = {
-    cmocka_unit_test(test_ft_strspn),
-    cmocka_unit_test(test_SIMPLE_STRSPN),
-    cmocka_unit_test(test_STUPID_STRSPN),
-    cmocka_unit_test(test_STRSPN),
+      cmocka_unit_test(test_ft_strspn),
+      cmocka_unit_test(test_SIMPLE_STRSPN),
+      cmocka_unit_test(test_STUPID_STRSPN),
+      cmocka_unit_test(test_STRSPN),
   };
 
   return cmocka_run_group_tests(strspn_tests, test_setup, test_teardown);
 }
 
 #ifdef SINGLE_TEST
-int test_main(void) {
-  return strspn_tests();
-}
+int test_main(void) { return strspn_tests(); }
 #endif

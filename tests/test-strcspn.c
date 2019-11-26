@@ -61,29 +61,29 @@ size_t STUPID_STRCSPN(const CHAR *s, const CHAR *rej) {
 #define BIG_CHAR CHAR_MAX
 #define SMALL_CHAR 127
 
-static void do_one_test(impl_t *impl, const CHAR *s, const CHAR *rej,
+static void do_one_test(s_tstbuf *tst, const CHAR *s, const CHAR *rej,
                         RES_TYPE exp_res) {
-  RES_TYPE res = CALL(impl, s, rej);
+  RES_TYPE res = CALL(tst->impl, s, rej);
   if (res != exp_res) {
-    errc(0, 0, "Wrong result in function %s %p %p", impl->name, (void *)res,
-         (void *)exp_res);
-    ret = 1;
+    errc(0, 0, "Wrong result in function %s %p %p", tst->impl->name,
+         (void *)res, (void *)exp_res);
+    tst->ret = 1;
     return;
   }
 }
 
-static void do_test(impl_t *impl, size_t align, size_t pos, size_t len) {
+static void do_test(s_tstbuf *tst, size_t align, size_t pos, size_t len) {
   size_t i;
   int c;
   RES_TYPE result;
   CHAR *rej, *s;
 
   align &= 7;
-  if ((align + pos + 10) * sizeof(CHAR) >= page_size || len > 240)
+  if ((align + pos + 10) * sizeof(CHAR) >= tst->page_size || len > 240)
     return;
 
-  rej = (CHAR *)(buf2) + (random() & 255);
-  s = (CHAR *)(buf1) + align;
+  rej = (CHAR *)(tst->buf2) + (random() & 255);
+  s = (CHAR *)(tst->buf1) + align;
 
   for (i = 0; i < len; ++i) {
     rej[i] = random() & BIG_CHAR;
@@ -113,14 +113,14 @@ static void do_test(impl_t *impl, size_t align, size_t pos, size_t len) {
   }
   result = STRPBRK_RESULT(s, pos);
 
-  do_one_test(impl, s, rej, result);
+  do_one_test(tst, s, rej, result);
 }
 
-static void do_random_tests(impl_t *impl) {
+static void do_random_tests(s_tstbuf *tst) {
   size_t i, j, n, align, pos, len, rlen;
   RES_TYPE result;
   int c;
-  UCHAR *p = (UCHAR *)(buf1 + page_size) - 512;
+  UCHAR *p = (UCHAR *)(tst->buf1 + tst->page_size) - 512;
   UCHAR *rej;
 
   for (n = 0; n < ITERATIONS; n++) {
@@ -137,7 +137,7 @@ static void do_random_tests(impl_t *impl) {
       rlen = random() & 63;
     else
       rlen = random() & 15;
-    rej = (UCHAR *)(buf2 + page_size) - rlen - 1 - (random() & 7);
+    rej = (UCHAR *)(tst->buf2 + tst->page_size) - rlen - 1 - (random() & 7);
     for (i = 0; i < rlen; ++i) {
       rej[i] = random() & BIG_CHAR;
       if (!rej[i])
@@ -172,79 +172,77 @@ static void do_random_tests(impl_t *impl) {
 
     result = STRPBRK_RESULT((CHAR *)(p + align), pos < len ? pos : len);
 
-    if (CALL(impl, (CHAR *)(p + align), (CHAR *)rej) != result) {
+    if (CALL(tst->impl, (CHAR *)(p + align), (CHAR *)rej) != result) {
       errc(0, 0,
-            "Iteration %zd - wrong result in function %s (%zd, %p, %zd, %zd, "
-            "%zd) %p != %p",
-            n, impl->name, align, rej, rlen, pos, len,
-            (void *)CALL(impl, (CHAR *)(p + align), (CHAR *)rej),
-            (void *)result);
-      ret = 1;
+           "Iteration %zd - wrong result in function %s (%zd, %p, %zd, %zd, "
+           "%zd) %p != %p",
+           n, tst->impl->name, align, rej, rlen, pos, len,
+           (void *)CALL(tst->impl, (CHAR *)(p + align), (CHAR *)rej),
+           (void *)result);
+      tst->ret = 1;
     }
   }
 }
 
 int strcspn_test(void **state) {
-  s_tstbuf *tst = (s_tstbuf*)(*state);
+  s_tstbuf *tst = (s_tstbuf *)(*state);
   size_t i;
 
   for (i = 0; i < 32; ++i) {
-    do_test(tst->impl, 0, 512, i);
-    do_test(tst->impl, i, 512, i);
+    do_test(tst, 0, 512, i);
+    do_test(tst, i, 512, i);
   }
 
   for (i = 1; i < 8; ++i) {
-    do_test(tst->impl, 0, 16 << i, 4);
-    do_test(tst->impl, i, 16 << i, 4);
+    do_test(tst, 0, 16 << i, 4);
+    do_test(tst, i, 16 << i, 4);
   }
 
   for (i = 1; i < 8; ++i)
-    do_test(tst->impl, i, 64, 10);
+    do_test(tst, i, 64, 10);
 
   for (i = 0; i < 64; ++i)
-    do_test(tst->impl, 0, i, 6);
+    do_test(tst, 0, i, 6);
 
-  do_random_tests(tst->impl);
-  return 0;
+  do_random_tests(tst);
+  return tst->ret;
 }
 
 void test_ft_strcspn(void **state) {
-  s_tstbuf *tst = (s_tstbuf*)(*state);
+  s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_ft_strcspn;
   tst->ret |= strcspn_test(state);
 }
 
 void test_SIMPLE_STRCSPN(void **state) {
-  s_tstbuf *tst = (s_tstbuf*)(*state);
+  s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_SIMPLE_STRCSPN;
   tst->ret |= strcspn_test(state);
 }
 
 void test_STUPID_STRCSPN(void **state) {
-  s_tstbuf *tst = (s_tstbuf*)(*state);
+  s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_STUPID_STRCSPN;
   tst->ret |= strcspn_test(state);
 }
 
 void test_STRCSPN(void **state) {
-  s_tstbuf *tst = (s_tstbuf*)(*state);
+  s_tstbuf *tst = (s_tstbuf *)(*state);
   tst->impl = &tst_STRCSPN;
   tst->ret |= strcspn_test(state);
 }
 
 int strcspn_tests(void) {
   const struct CMUnitTest strcspn_tests[] = {
-    cmocka_unit_test(test_ft_strcspn),
-    cmocka_unit_test(test_SIMPLE_STRCSPN),
-    cmocka_unit_test(test_STUPID_STRCSPN),
-    cmocka_unit_test(test_STRCSPN),
+      cmocka_unit_test(test_ft_strcspn),
+      cmocka_unit_test(test_SIMPLE_STRCSPN),
+      cmocka_unit_test(test_STUPID_STRCSPN),
+      cmocka_unit_test(test_STRCSPN),
   };
 
   return cmocka_run_group_tests(strcspn_tests, test_setup, test_teardown);
 }
 
 #ifdef SINGLE_TEST
-int test_main(void) {
-  return strcspn_tests();
-}
+int test_main(void) { return strcspn_tests(); }
 #endif
