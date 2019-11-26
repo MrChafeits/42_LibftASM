@@ -1,8 +1,7 @@
 # 42_LibftASM
 Introduction to 64-bit NASM by reimplementing several Libft functions
-Usage
 
-ToUsage
+Usage
 -----
 To get started, you must first clone the repository and compile the code as follows:
 ```bash
