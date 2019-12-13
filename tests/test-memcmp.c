@@ -137,7 +137,7 @@ static void do_random_tests(s_tstbuf *tst) {
   }
 }
 
-static void check1(impl_t *impl) {
+static void check1(s_tstbuf *tst) {
   CHAR s1[116] = {
       0x94, 0x63, 0x8f, 0x01, 0x74, 0x63, 0x8f, 0x01, 0x54, 0x63, 0x8f, 0x01,
       0x34, 0x63, 0x8f, 0x01, 0xb4, 0xf2, 0x93, 0x01, 0x94, 0xf2, 0x93, 0x01,
@@ -166,7 +166,7 @@ static void check1(impl_t *impl) {
   for (size_t i = 0; i < n; i++)
     for (size_t len = 0; len <= n - i; ++len) {
       exp_result = SIMPLE_MEMCMP(s1 + i, s2 + i, len);
-      check_result(impl, s1 + i, s2 + i, len, exp_result);
+      check_result(tst->impl, s1 + i, s2 + i, len, exp_result);
     }
 }
 

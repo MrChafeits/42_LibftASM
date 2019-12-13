@@ -36,6 +36,7 @@ ft_debugbreak.s
 TSTSRC = main.c \
 test-atoi.c \
 test-bzero.c \
+test-cat.c \
 test-ctype.c \
 test-debugbreak.c \
 test-memcmp.c \
@@ -92,6 +93,11 @@ test-atoi: $(NAME)
 .PHONY: test-bzero
 test-bzero: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS) -DSINGLE_TEST
 test-bzero: $(NAME)
+	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.c
+
+.PHONY: test-cat
+test-cat: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS) -DSINGLE_TEST
+test-cat: $(NAME)
 	$(CC) $(CFLAGS) -o $@ tests/$@.c tests/main.c
 
 .PHONY: test-ctype

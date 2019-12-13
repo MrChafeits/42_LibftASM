@@ -63,7 +63,7 @@ static void do_test(s_tstbuf *tst, size_t align1, size_t align2, size_t len) {
   for (i = 0, j = 1; i < len; i++, j += 23)
     s1[i] = j;
 
-  do_one_test(tst->impl, s2, (char *)(tst->buf2 + align1), s1, len);
+  do_one_test(tst, s2, (char *)(tst->buf2 + align1), s1, len);
 }
 
 static void do_random_tests(s_tstbuf *tst) {

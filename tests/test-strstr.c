@@ -79,7 +79,7 @@ static int check_result(s_tstbuf *tst, const char *s1, const char *s2,
 
 static void do_one_test(s_tstbuf *tst, const char *s1, const char *s2,
                         char *exp_result) {
-  if (check_result(tst->impl, s1, s2, exp_result) < 0)
+  if (check_result(tst, s1, s2, exp_result) < 0)
     return;
 }
 
@@ -111,7 +111,7 @@ static void do_test(s_tstbuf *tst, size_t align1, size_t align2, size_t len1,
   }
   s1[len1] = '\0';
 
-  do_one_test(tst->impl, s1, s2, fail ? NULL : s1 + len1 - len2);
+  do_one_test(tst, s1, s2, fail ? NULL : s1 + len1 - len2);
 }
 
 static void check1(s_tstbuf *tst) {
@@ -122,7 +122,7 @@ static void check1(s_tstbuf *tst) {
 
   exp_result = stupid_strstr(s1, s2);
 
-  check_result(tst->impl, s1, s2, exp_result);
+  check_result(tst, s1, s2, exp_result);
 }
 
 static void check2(s_tstbuf *tst) {
@@ -132,8 +132,8 @@ static void check2(s_tstbuf *tst) {
 
   strcpy(s2, s1);
   exp_result = stupid_strstr(s1, s1 + 18);
-  check_result(tst->impl, s1, s1 + 18, exp_result);
-  check_result(tst->impl, s2, s1 + 18, exp_result);
+  check_result(tst, s1, s1 + 18, exp_result);
+  check_result(tst, s2, s1 + 18, exp_result);
 }
 
 #define N 1024
@@ -155,7 +155,7 @@ static void pr23637(s_tstbuf *tst) {
   h[0] = 'x';
 
   char *exp_result = stupid_strstr(h, n);
-  check_result(tst->impl, h, n, exp_result);
+  check_result(tst, h, n, exp_result);
 }
 
 static int strstr_test(void **state) {

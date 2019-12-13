@@ -58,9 +58,9 @@ size_t STUPID_STRSPN(const CHAR *s, const CHAR *acc) {
   return i;
 }
 
-static void do_one_test(impl_t *impl, const CHAR *s, const CHAR *acc,
+static void do_one_test(s_tstbuf *tst, const CHAR *s, const CHAR *acc,
                         size_t exp_res) {
-  size_t res = CALL(impl, s, acc);
+  size_t res = CALL(tst->impl, s, acc);
   assert_int_equal(res, exp_res);
 }
 
@@ -95,7 +95,7 @@ static void do_test(s_tstbuf *tst, size_t align, size_t pos, size_t len) {
     s[i] = '\0';
   }
 
-  do_one_test(tst->impl, s, acc, pos);
+  do_one_test(tst, s, acc, pos);
 }
 
 static void do_random_tests(s_tstbuf *tst) {
@@ -154,22 +154,22 @@ int strspn_test(void **state) {
   size_t i;
 
   for (i = 0; i < 32; ++i) {
-    do_test(tst->impl, 0, 512, i);
-    do_test(tst->impl, i, 512, i);
+    do_test(tst, 0, 512, i);
+    do_test(tst, i, 512, i);
   }
 
   for (i = 1; i < 8; ++i) {
-    do_test(tst->impl, 0, 16 << i, 4);
-    do_test(tst->impl, i, 16 << i, 4);
+    do_test(tst, 0, 16 << i, 4);
+    do_test(tst, i, 16 << i, 4);
   }
 
   for (i = 1; i < 8; ++i)
-    do_test(tst->impl, i, 64, 10);
+    do_test(tst, i, 64, 10);
 
   for (i = 0; i < 64; ++i)
-    do_test(tst->impl, 0, i, 6);
+    do_test(tst, 0, i, 6);
 
-  do_random_tests(tst->impl);
+  do_random_tests(tst);
   return 0;
 }
 

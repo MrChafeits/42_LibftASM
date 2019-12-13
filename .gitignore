@@ -54,6 +54,7 @@ dkms.conf
 test
 test-atoi
 test-bzero
+test-cat
 test-ctype
 test-debugbreak
 test-memcmp
@@ -67,5 +68,6 @@ test-strcspn
 test-strdup
 test-strlen
 test-strspn
+test-strstr
 puts_stdout.txt
 cat_stdout.txt
