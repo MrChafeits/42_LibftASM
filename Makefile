@@ -1,8 +1,7 @@
 AS = nasm
 ASFLAGS = -fmacho64
-ARFLAGS = -cru
+ARFLAGS = crsu
 
-RANLIB = ranlib
 NAME = libfts.a
 
 INCDIR = include
@@ -52,26 +51,32 @@ test-strlen.c \
 test-strspn.c \
 test-strstr.c
 
-SRCS = $(addprefix $(SRCDIR)/, $(SRC))
-OBJS = $(SRCS:.s=.o)
+SRCS := $(addprefix $(SRCDIR)/, $(SRC))
+OBJS := $(SRCS:.s=.o)
 
-TSTSRCS = $(addprefix tests/, $(TSTSRC))
-TSTOBJS = $(TSTSRCS:.c=.o)
+TSTSRCS := $(addprefix tests/, $(TSTSRC))
+TSTOBJS := $(TSTSRCS:.c=.o)
+TSTBIN := $(TSTSRCS:.c=)
 
 INCDIR = include
 
 CCFLAGS = -Wall -Wextra -Werror
-INCLUDES = -I$(INCDIR) $(shell pkg-config --cflags cmocka)
-LDFLAGS = -L. -lfts $(shell pkg-config --libs cmocka)
+INCLUDES := -I$(INCDIR) $(shell pkg-config --cflags cmocka)
+LDFLAGS := -L. -lfts $(shell pkg-config --libs cmocka)
 
-HAVE_USR_INC = $(shell test -d /usr/include; echo "$$?")
-ifneq ("$(HAVE_USR_INC)", "0")
-	CCFLAGS += -Wno-nullability-completeness
-	INCLUDES += -I$(shell xcode-select -p)/SDKs/MacOSX.sdk/usr/include
-else
-	LDFLAGS +=
-	INCLUDES +=
-endif
+host_os := $(shell uname)
+ifeq "$(host_os)" "Darwin"
+xcode_path := $(shell xcode-select -p)
+ifeq "$(shell expr `$(CC) --version | awk 'NR==1{ printf("%.1s\n", $$4) }'` \>= 11)" "1"
+ifeq "$(wildcard /usr/include/.*)" ""
+INCDIRS += $(xcode_path)/SDKs/MacOSX.sdk/usr/include
+endif # !/usr/include
+CCFLAGS += -Wno-nullability-completeness
+endif # Apple Clang major version < 11
+else  # Not Apple Darwin Kernel
+cc_major_ver := $(shell $(CC) -dumpversion)
+#TODO: change flags for cc_major_ver on non-Darwin systems
+endif # !host_os
 
 CFLAGS = $(CCFLAGS) $(INCLUDES)
 
@@ -82,7 +87,7 @@ $(NAME): $(OBJS)
 	$(RANLIB) $@
 
 test: CFLAGS = $(CCFLAGS) $(INCLUDES) $(LDFLAGS)
-test: $(NAME)
+test: $(NAME) $(TSTOBJS)
 	$(CC) $(CFLAGS) -o $@ $(TSTSRCS)
 
 .PHONY: test-atoi
